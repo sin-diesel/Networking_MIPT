@@ -1,3 +1,6 @@
 a.out
 client
+client.o
 server
+server.o
+Sockets_practice
