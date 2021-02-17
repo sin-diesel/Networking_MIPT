@@ -98,6 +98,16 @@ int main() {
             sk_addr.sin_addr.s_addr = addr.s_addr;
         #endif
 
+        #ifdef COMM
+
+        res = inet_pton(AF_INET, FRIENDIP, &addr);
+        if (res != 1) {
+            printf("IP address is invalid\n");
+        }
+        sk_addr.sin_addr.s_addr = addr.s_addr;
+        
+        #endif 
+
         } else if (strcmp(buf, EXIT) == 0) {
             close(client_sk);
             unlink(PATH);

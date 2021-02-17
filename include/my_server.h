@@ -15,6 +15,10 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
+#define COMM
+
+#define FRIENDIP "192.168.43.159"
+
 #define INET
 
 /* Debugging macro */

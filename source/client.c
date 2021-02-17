@@ -57,7 +57,19 @@ int main(int argc, char** argv) {
     struct sockaddr_in sk_addr = {0};
     sk_addr.sin_family = AF_INET;
     sk_addr.sin_port = htons(23456); /* using here htons for network byte order conversion */
+
+    #ifdef COMM
+    struct in_addr addr;
+    res = inet_pton(AF_INET, FRIENDIP, &addr);
+    if (res != 1) {
+        printf("IP address is invalid\n");
+    }
+    sk_addr.sin_addr.s_addr = addr.s_addr;
+    #else
     sk_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* same goes for ip */
+    #endif
+
+
     #else
     struct sockaddr_un sk_addr = {0};
     sk_addr.sun_family = AF_UNIX;
