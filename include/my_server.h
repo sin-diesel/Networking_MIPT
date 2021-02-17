@@ -10,6 +10,13 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+/* for ip addressing */
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+
+#define INET
+
 /* Debugging macro */
 #define ERROR(error) fprintf(stderr, "Error in line %d, function %s: "         \
                                     "%s\n", __LINE__, __func__, strerror(error)) \
@@ -18,30 +25,19 @@
 #define PRINT "--print"
 #define EXIT "--exit"
 
-/* redundant */
-enum offsets {
-    PRINT_L = 0,
-    EXIT_L = 6
-};
-
 enum commands {
     PRINT_CMD = 0,
     EXIT_CMD,
 };
 
 
+/* Path for local communication with sockets */
 #define PATH "/tmp/my_socket"
+
 /* Buf size for messages */
 #define BUFSZ 1024
 
+/* Maximum amount of pending requests */
 #define MAX_QUEUE 20
 
-void init_address(struct sockaddr_un* sk_addr);
-
-int send_message(int sk, int which_cmd, char* command, char* msg);
-
 int check_input(int argc);
-
-void print_message(char* buf);
-
-int read_message(int client_sk);
