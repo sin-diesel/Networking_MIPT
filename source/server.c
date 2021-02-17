@@ -34,6 +34,17 @@ int main() {
     strncpy(sk_addr.sun_path, PATH, sizeof(sk_addr.sun_path) - 1);
     #endif
 
+    #ifdef COMM
+
+    struct in_addr addr;
+    res = inet_pton(AF_INET, FRIENDIP, &addr);
+    if (res != 1) {
+        printf("IP address is invalid\n");
+    }
+    sk_addr.sin_addr.s_addr = addr.s_addr;
+
+    #endif
+
     res = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
     if (res < 0) {
@@ -98,15 +109,15 @@ int main() {
             sk_addr.sin_addr.s_addr = addr.s_addr;
         #endif
 
-        #ifdef COMM
+        // #ifdef COMM
 
-        res = inet_pton(AF_INET, FRIENDIP, &addr);
-        if (res != 1) {
-            printf("IP address is invalid\n");
-        }
-        sk_addr.sin_addr.s_addr = addr.s_addr;
+        // res = inet_pton(AF_INET, FRIENDIP, &addr);
+        // if (res != 1) {
+        //     printf("IP address is invalid\n");
+        // }
+        // sk_addr.sin_addr.s_addr = addr.s_addr;
         
-        #endif 
+        // #endif 
 
         } else if (strcmp(buf, EXIT) == 0) {
             close(client_sk);
