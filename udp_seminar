@@ -1,0 +1,23 @@
+Sockets
+
+socket(AF_INET, SOCK_DGRAM, 0);
+
+server						client
+
+UDP
+
+bind + recvfrom				sendto (sendmsg)
+
+
+TCP
+
+bind						connect
+listen						write/sendto
+accept
+read/recvfrom
+
+-size_t recvfrom(....)
+
+int flags: MSG_PEEK, sockaddr* addr - where to place senders data, socklen_t* len - len of source addr (for different )
+
+-size_t sendto(int sockfd, void* buf, size_t len)
