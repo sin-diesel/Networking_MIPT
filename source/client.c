@@ -39,9 +39,7 @@ int main(int argc, char** argv) {
     } else if (argc == 3) {
         msg = argv[2];
         if (strcmp(command, PRINT) == 0) {
-            printf(usage);
             which_cmd = PRINT_CMD;
-            return -1;
         }
 
     }
@@ -119,9 +117,12 @@ int main(int argc, char** argv) {
     int cmd_len = 0;
     int len = 0;
 
+    cmd_len = strlen(command); // fix later
+    printf("Command len: %d\n", cmd_len);
+
     /* writing only exit command */
     if (which_cmd == EXIT_CMD) {
-        cmd_len = strlen(command);
+
         res =  sendto(sk, command, cmd_len, 0, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
         if (res < 0) {
             ERROR(errno);
@@ -132,7 +133,7 @@ int main(int argc, char** argv) {
     /* writing print command and message */
     else if (which_cmd == PRINT_CMD) {
 
-        cmd_len = strlen(command);
+
         res =  sendto(sk, command, cmd_len, 0, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
         if (res < 0) {
@@ -141,6 +142,8 @@ int main(int argc, char** argv) {
         }
 
         len = strlen(msg);
+        /* null terminating message */
+        msg[len] = '\0';
 
         res =  sendto(sk, msg, len, 0, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
@@ -150,13 +153,11 @@ int main(int argc, char** argv) {
         }
 
     } else if (which_cmd == LS_CMD) {
-        cmd_len = strlen(command); // fix later
         res =  sendto(sk, command, cmd_len, 0, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
     }
 
     else if (which_cmd == CD_CMD) {
-        cmd_len = strlen(command); // fix later
         res =  sendto(sk, command, cmd_len, 0, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
         /* cd arguments */

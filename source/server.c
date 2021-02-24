@@ -101,6 +101,7 @@ int main() {
         char buf[BUFSZ];
         char msg[BUFSZ];
         res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
+        buf[res] = '\0';
 
         if (res < 0) {
             ERROR(errno);
@@ -108,7 +109,7 @@ int main() {
         }
 
 
-        if (strcmp(buf, PRINT) == 0) {
+        if (strncmp(buf, PRINT, PRINT_LEN) == 0) {
             /* read message and print it */
             res = read(sk, msg, BUFSZ);
             if (res < 0 || res >= BUFSZ) {
@@ -116,13 +117,15 @@ int main() {
                 return -1;
             }
 
+            msg[res] = '\0';
+
             /* Print message */
             printf("Message from client: %s\n", msg);
-        } else if (strcmp(buf, EXIT) == 0) {
+        } else if (strncmp(buf, EXIT, EXIT_LEN) == 0) {
                 close(sk);
                 unlink(PATH);
                 exit(EXIT_SUCCESS);
-        } else if (strcmp(buf, LS) == 0) {
+        } else if (strncmp(buf, LS, LS_LEN) == 0) {
 
             printf("Executing LS command\n");
             int pid = fork();
@@ -130,10 +133,12 @@ int main() {
                 execlp("ls", "ls");
             }
 
-        } else if (strcmp(buf, CD) == 0) {
+        } else if (strncmp(buf, CD, CD_LEN) == 0) {
             printf("Executing CD command\n");
 
             res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
+            //printf("res received: %d\n", res);
+            buf[res] = '\0';
             if (res < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);
@@ -142,7 +147,7 @@ int main() {
             int arg_len = strlen(buf);
 
             /* Null terminate the string so \n does not interfere */
-            buf[arg_len - 1] = '\0';
+            buf[arg_len] = '\0';
 
             res = chdir(buf);
             if (res < 0) {
@@ -152,6 +157,7 @@ int main() {
         } else {
             printf("Command from client not recognized\n");
             printf("%s\n", buf);
+            printf("msg len: %d\n", strlen(buf));
         }
 
         #endif

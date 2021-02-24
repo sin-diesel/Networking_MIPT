@@ -45,6 +45,13 @@ enum commands {
     CD_CMD
 };
 
+enum cmd_len {
+    PRINT_LEN = 7,
+    EXIT_LEN = 6,
+    LS_LEN = 2,
+    CD_LEN = 2,
+};
+
 
 /* Path for local communication with sockets */
 #define PATH "/tmp/my_socket"
