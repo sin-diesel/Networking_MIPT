@@ -2,17 +2,13 @@
     messages from clients */
 
 
-/* TODO */
-/* 1) fix not recognized command */
-
 #include "my_server.h"
 
 int main() {
 
-    /* creating and initializing socket */
+    /* Creating and initializing socket */
     int sk = 0;
-    int res = 0;
-
+    int ret = 0;
 
     #ifdef UDP
     sk = socket(AF_INET, SOCK_DGRAM, 0);
@@ -63,19 +59,19 @@ int main() {
 
     #ifdef UDP
 
-    struct sockaddr_in sk_addr = {0};
+    struct sockaddr_in sk_addr;
     sk_addr.sin_family = AF_INET;
-    sk_addr.sin_port = htons(23456);
-    sk_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // fix later
+    sk_addr.sin_port = htons(PORT);
+    sk_addr.sin_addr.s_addr = htonl(INADDR_ANY); // fix later CAREFUL
 
     #endif
 
-    res = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
+    ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
-    if (res < 0) {
+    if (ret < 0) {
         ERROR(errno);
         close(sk);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     /* activate socket and listen for transmissions */
@@ -98,35 +94,59 @@ int main() {
 
         #ifdef UDP
 
-        char buf[BUFSZ];
-        char msg[BUFSZ];
-        res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
-        buf[res] = '\0';
+        char buf[BUFSIZ];
+        char msg[BUFSIZ];
 
-        if (res < 0) {
+        /* Receiving message from client */
+        struct sockaddr_in receiver_data;
+        socklen_t addrlen = sizeof(receiver_data);
+
+        ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &receiver_data, &addrlen);
+        if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
 
+        printf("Bytes received: %d\n", ret);
+        /* Null terminating buf */
+        buf[ret] = '\0';
+
+        char receiver_ip[BUFSIZ];
+        /* Taking address and handing over to inet_ntoa function */
+        char* addr = &receiver_ip;
+
+        addr = inet_ntoa(receiver_data.sin_addr);
+        if (addr == -1) {
+            printf("Receiver address invalid\n");
+        }
+
+        printf("Receiver addr: %s\n", addr);
+        printf("Receiver port: %d\n", htons(receiver_data.sin_port));
+        if (ret < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+        /* Decide which message was sent */
 
         if (strncmp(buf, PRINT, PRINT_LEN) == 0) {
             /* read message and print it */
-            res = read(sk, msg, BUFSZ);
-            if (res < 0 || res >= BUFSZ) {
-                printf("Unexpected read error or overflow %d\n", res);
+            ret = read(sk, msg, BUFSIZ);
+            if (ret < 0 || ret >= BUFSIZ) {
+                printf("Unexpected read error or overflow %d\n", ret);
                 return -1;
             }
-
-            msg[res] = '\0';
+            msg[ret] = '\0';
 
             /* Print message */
             printf("Message from client: %s\n", msg);
         } else if (strncmp(buf, EXIT, EXIT_LEN) == 0) {
+            /* Closing server */
                 close(sk);
                 unlink(PATH);
                 exit(EXIT_SUCCESS);
         } else if (strncmp(buf, LS, LS_LEN) == 0) {
-
+            /* Printing current directory */
             printf("Executing LS command\n");
             int pid = fork();
             if (pid == 0) {
@@ -136,28 +156,36 @@ int main() {
         } else if (strncmp(buf, CD, CD_LEN) == 0) {
             printf("Executing CD command\n");
 
-            res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
-            //printf("res received: %d\n", res);
-            buf[res] = '\0';
-            if (res < 0) {
+            // res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
+            // //printf("res received: %d\n", res);
+            // buf[res] = '\0';
+            // if (res < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+            // printf("Arg: %s\n", buf);
+            // int arg_len = strlen(buf);
+
+            // /* Null terminate the string so \n does not interfere */
+            // buf[arg_len] = '\0';
+
+            // res = chdir(buf);
+            // if (res < 0) {
+            //     ERROR(errno);
+            // }
+
+        } else if (strncmp(buf, BROAD, BROAD_LEN) == 0) {
+            printf("Broadcasting server IP\n");
+            char message[] = "Reply to sender";
+            ret =  sendto(sk, &message, sizeof(message), 0, (struct sockaddr*) &receiver_data, sizeof(receiver_data));
+            if (ret < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);
             }
-            printf("Arg: %s\n", buf);
-            int arg_len = strlen(buf);
 
-            /* Null terminate the string so \n does not interfere */
-            buf[arg_len] = '\0';
-
-            res = chdir(buf);
-            if (res < 0) {
-                ERROR(errno);
-            }
-
-        } else {
+        }else {
             printf("Command from client not recognized\n");
-            printf("%s\n", buf);
-            printf("msg len: %d\n", strlen(buf));
+            printf("Actual buffer sent: %s\n", buf);
         }
 
         #endif
