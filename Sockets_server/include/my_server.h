@@ -15,6 +15,9 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
+/* For multi-threaded server */
+#include <pthread.h>
+
 /* For communication between computers */
 //#define COMM
 //#define FRIENDIP "192.168.43.159"
@@ -53,6 +56,11 @@ struct message {
     char data[MSGSIZE];
 };
 
+struct pip {
+    int rd;
+    int wr;
+};
+
 /* Types of commands that can be sent to our server */
 enum cmds {
     PRINT_CMD = 0,
@@ -79,9 +87,16 @@ enum cmd_len {
 /* Port for communication */
 #define PORT 23456
 
+/* Maximum amount of clients */
+#define MAXCLIENTS 100000
+
 /* Maximum amount of pending requests */
 #define MAX_QUEUE 20
 
 int check_input(int argc, char** argv, char** command, char** arg);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
+
+void* handle_connection(pthread_t* client);
+
+int lookup(int* id_map, int n_ids, pid_t id);

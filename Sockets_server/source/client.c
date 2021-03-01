@@ -88,107 +88,139 @@ int main(int argc, char** argv) {
     //     exit(EXIT_FAILURE);
     // }
 
+    /* Binding socket */
+    struct sockaddr_in bind_data;
+    bind_data.sin_family = AF_INET;
+    bind_data.sin_port = htons(0);
+    bind_data.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    /* Send command to a server */
-    int cmd_len = 0;
-    int arg_len = 0;
-
-    cmd_len = strlen(command); // fix later
-    if (arg != NULL) {
-        arg_len = strlen(arg);
-    }
-
-    printf("Command length: %d\n", cmd_len);
-
-    /* For now pid is identifier */
-    pid_t pid = getpid();
-
-    /* Sending message containing command, client identifier and arguments */
-    struct message msg;
-    memcpy(&(msg.cmd), command, cmd_len);
-    memcpy(&(msg.id), &pid, sizeof(pid_t));
-    memcpy(&(msg.data), arg, arg_len);
-
-    printf("Message to be sent:\n");
-    printf("Command: %s\n", msg.cmd);
-    printf("Data: %s\n", msg.data);
-    printf("ID: %d\n", msg.id);
-
-    printf("Sending command\n");
-    if (which_cmd == EXIT_CMD) {
-        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
-    } else if (which_cmd == PRINT_CMD) {
-
-        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-        // printf("Sending message\n");
-        // ret = send_message(sk, arg, arg_len, &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
-
-
-    } else if (which_cmd == LS_CMD) {
-        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
-    } else if (which_cmd == CD_CMD) {
-        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
-
-        // printf("Sending argument for cd\n");
-        // ret = send_message(sk, arg, arg_len, &sk_addr);
-        // printf("Bytes sent: %d\n\n\n", ret);
-
-
-    } else if (which_cmd == BRCAST_CMD) {
-
-        /* Allowing broadcast */
-        int confirm = 1;
-        setsockopt(sk, SOL_SOCKET, SO_BROADCAST, &confirm, sizeof(confirm));
-
-        struct sockaddr_in receiver_data;
-        receiver_data.sin_family = AF_INET;
-        receiver_data.sin_port = htons(PORT); /* using here htons for network byte order conversion */
-        receiver_data.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-
-        /* Binding socket */
-        struct sockaddr_in bind_data;
-        bind_data.sin_family = AF_INET;
-        bind_data.sin_port = htons(0);
-        bind_data.sin_addr.s_addr = htonl(INADDR_ANY);
-
-        ret = bind(sk, (struct sockaddr*) &bind_data, sizeof(bind_data));
-        if (ret < 0) {
-            ERROR(errno);
-            return -1;
-        }
-
-        printf("Sending broadcast message\n");
-        ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
-        printf("Bytes sent: %d\n\n\n", ret);
-
-        /* Receiving broadcast */
-        /* Buffer for data */
-        char buf[BUFSIZ];
-        struct sockaddr_in sender_data;
-        socklen_t addrlen = sizeof(sender_data);
-
-        ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &sender_data, &addrlen);
-        if (ret < 0) {
-            ERROR(errno);
-            return -1;
-        }
-
-        printf("Bytes received: %d\n", ret);
-
-        printf("Server address received from broadcast: %s\n\n\n", inet_ntoa(sender_data.sin_addr));
-    }
-
+    ret = bind(sk, (struct sockaddr*) &bind_data, sizeof(bind_data));
     if (ret < 0) {
-        fprintf(stderr, "Error sending message\n");
-        close(sk);
-        exit(EXIT_FAILURE);
-    } else {
-        printf("Bytes sent: %d\n", ret);
+        ERROR(errno);
+        return -1;
     }
+
+    /* Allowing broadcast */
+    int confirm = 1;
+    setsockopt(sk, SOL_SOCKET, SO_BROADCAST, &confirm, sizeof(confirm));
+
+    struct sockaddr_in receiver_data;
+    receiver_data.sin_family = AF_INET;
+    receiver_data.sin_port = htons(PORT); /* using here htons for network byte order conversion */
+    receiver_data.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    
+
+    while(1) {
+    /* Send command to a server */
+        int cmd_len = 0;
+        int arg_len = 0;
+
+        cmd_len = strlen(command); // fix later
+        if (arg != NULL) {
+            arg_len = strlen(arg);
+        }
+
+        printf("Command length: %d\n", cmd_len);
+
+        /* For now pid is identifier */
+        pid_t pid = getpid();
+
+        /* Sending message containing command, client identifier and arguments */
+        struct message msg;
+        memset(&msg, '\0', sizeof(struct message));
+        memcpy(&(msg.cmd), command, cmd_len);
+        memcpy(&(msg.id), &pid, sizeof(pid_t));
+        memcpy(&(msg.data), arg, arg_len);
+
+        printf("Message to be sent:\n");
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
+        printf("ID: %d\n", msg.id);
+
+        printf("Sending command\n");
+        if (which_cmd == EXIT_CMD) {
+            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+            printf("Bytes sent: %d\n\n\n", ret);
+        } else if (which_cmd == PRINT_CMD) {
+
+            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+            // printf("Sending message\n");
+            // ret = send_message(sk, arg, arg_len, &sk_addr);
+            printf("Bytes sent: %d\n\n\n", ret);
+
+
+        } else if (which_cmd == LS_CMD) {
+            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+            printf("Bytes sent: %d\n\n\n", ret);
+        } else if (which_cmd == CD_CMD) {
+            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+            printf("Bytes sent: %d\n\n\n", ret);
+
+            // printf("Sending argument for cd\n");
+            // ret = send_message(sk, arg, arg_len, &sk_addr);
+            // printf("Bytes sent: %d\n\n\n", ret);
+
+
+        } else if (which_cmd == BRCAST_CMD) {
+
+            printf("Sending broadcast message\n");
+            ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
+            printf("Bytes sent: %d\n\n\n", ret);
+
+            /* Receiving broadcast */
+            /* Buffer for data */
+            char buf[BUFSIZ];
+            struct sockaddr_in sender_data;
+            socklen_t addrlen = sizeof(sender_data);
+
+            ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &sender_data, &addrlen);
+            if (ret < 0) {
+                ERROR(errno);
+                return -1;
+            }
+
+            printf("Bytes received: %d\n", ret);
+
+            printf("Server address received from broadcast: %s\n\n\n", inet_ntoa(sender_data.sin_addr));
+        }
+
+        if (ret < 0) {
+            fprintf(stderr, "Error sending message\n");
+            close(sk);
+            exit(EXIT_FAILURE);
+        } else {
+            printf("Bytes sent: %d\n", ret);
+        }
+
+        /* Here we manually enter commands */
+
+        printf("Enter number of arguments:");
+        ret = scanf("%d", &argc);
+        if (ret != 1) {
+            printf("Error reading input\n");
+        }
+
+        for (int i = 0; i < argc; ++i) {
+            argv[i] = (char*) calloc(MSGSIZE, sizeof(char)); // Do not forget to free later
+        }
+
+        printf("Enter arguments:");
+        for (int i = 0; i < argc; ++i) {
+            ret = scanf("%s", argv[i]);
+            if (ret != 1) {
+                printf("Error reading input\n");
+            }
+        }
+
+        which_cmd = check_input(argc, argv, &command, &arg);
+        if (which_cmd == BAD_CMD || command == NULL) {
+            fprintf(stderr, "Error in command recognition\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("Command entered: %s\n", command);
+    }
+
+    //sleep(3);
 
     close(sk);
 

@@ -60,3 +60,14 @@ int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* s
     return ret;
 }
 
+int lookup(int* id_map, int n_ids, pid_t id) {
+    if (id_map[id] == 1) {
+        return 1;
+    }
+    return 0;
+}
+
+// void* handle_connection(pthread_t* client) {
+
+// }
+

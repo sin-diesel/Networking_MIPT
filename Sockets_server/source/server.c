@@ -64,6 +64,19 @@ int main() {
     sk_addr.sin_port = htons(PORT);
     sk_addr.sin_addr.s_addr = htonl(INADDR_ANY); // fix later CAREFUL
 
+    /* Set up fixed amount of thread identifiers, each thread identifier associates
+    with a particular client */
+    pthread_t thread_ids[MAXCLIENTS];
+
+    /* Basically bitmap */
+    int id_map[MAXCLIENTS];
+    for (int i = 0; i < MAXCLIENTS; ++i) {
+        id_map[i] = 0;
+    }
+
+    /* pipes for transferring data */
+    struct pip pipes[MAXCLIENTS];
+
     #endif
 
     ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
@@ -95,7 +108,6 @@ int main() {
         #ifdef UDP
 
         char buf[BUFSIZ];
-        //char msg[BUFSIZ];
         struct message msg;
 
         /* Receiving message from client */
@@ -110,12 +122,6 @@ int main() {
 
         printf("Bytes received: %d\n", ret);
         printf("Message size expected: %ld\n", sizeof(struct message));
-        /* Null terminating buf */
-        //buf[ret] = '\0';
-
-        //char receiver_ip[BUFSIZ];
-        /* Taking address and handing over to inet_ntoa function */
-        //char* addr = &receiver_ip;
 
         char* addr = inet_ntoa(client_data.sin_addr);
         if (addr == NULL) {
@@ -128,6 +134,17 @@ int main() {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
+
+        /* Check whether we need a new thread */
+        int exists = lookup(id_map, MAXCLIENTS, msg.id);
+        if (exists == 0) {
+            printf("New client: %d\n", msg.id);
+            id_map[msg.id] = 1;
+        } else {
+            printf("Old client: %d\n", msg.id);
+        }
+
+        /* Transfer the data to corresponding thread */
 
         /* Decide which message was sent */
 
