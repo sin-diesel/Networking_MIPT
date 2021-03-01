@@ -98,10 +98,10 @@ int main() {
         char msg[BUFSIZ];
 
         /* Receiving message from client */
-        struct sockaddr_in receiver_data;
-        socklen_t addrlen = sizeof(receiver_data);
+        struct sockaddr_in client_data;
+        socklen_t addrlen = sizeof(client_data);
 
-        ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &receiver_data, &addrlen);
+        ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &client_data, &addrlen);
         if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
@@ -111,17 +111,17 @@ int main() {
         /* Null terminating buf */
         buf[ret] = '\0';
 
-        char receiver_ip[BUFSIZ];
+        //char receiver_ip[BUFSIZ];
         /* Taking address and handing over to inet_ntoa function */
-        char* addr = &receiver_ip;
+        //char* addr = &receiver_ip;
 
-        addr = inet_ntoa(receiver_data.sin_addr);
-        if (addr == -1) {
-            printf("Receiver address invalid\n");
+        char* addr = inet_ntoa(client_data.sin_addr);
+        if (addr == NULL) {
+            printf("Client address invalid\n");
         }
 
-        printf("Receiver addr: %s\n", addr);
-        printf("Receiver port: %d\n", htons(receiver_data.sin_port));
+        printf("Client addr: %s\n", addr);
+        printf("Client port: %d\n", htons(client_data.sin_port));
         if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
@@ -176,8 +176,9 @@ int main() {
 
         } else if (strncmp(buf, BROAD, BROAD_LEN) == 0) {
             printf("Broadcasting server IP\n");
-            char message[] = "Reply to sender";
-            ret =  sendto(sk, &message, sizeof(message), 0, (struct sockaddr*) &receiver_data, sizeof(receiver_data));
+            char message[] = "Reply to client";
+            ret =  sendto(sk, &message, sizeof(message), 0,
+                             (struct sockaddr*) &client_data, sizeof(client_data));
             if (ret < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);

@@ -13,6 +13,7 @@ int main(int argc, char** argv) {
     }
 
     int sk = 0;
+    int ret = 0;
 
     #ifdef UDP
     sk = socket(AF_INET, SOCK_DGRAM, 0);
@@ -80,11 +81,17 @@ int main(int argc, char** argv) {
     sk_addr.sin_port = htons(PORT); /* using here htons for network byte order conversion */
     sk_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
+    /* Binding to address */
+    //ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
+    // if (ret < 0) {
+    //     ERROR(errno);
+    //     exit(EXIT_FAILURE);
+    // }
+
 
     /* Send command to a server */
     int cmd_len = 0;
     int arg_len = 0;
-    int ret = 0;
 
     cmd_len = strlen(command); // fix later
     if (arg != NULL) {
@@ -96,24 +103,25 @@ int main(int argc, char** argv) {
     printf("Sending command\n");
     if (which_cmd == EXIT_CMD) {
         ret = send_message(sk, command, cmd_len, &sk_addr);
-        printf("Bytes sent: %d\n", ret);
+        printf("Bytes sent: %d\n\n\n", ret);
     } else if (which_cmd == PRINT_CMD) {
 
         ret = send_message(sk, command, cmd_len, &sk_addr);
         printf("Sending message\n");
         ret = send_message(sk, arg, arg_len, &sk_addr);
-        printf("Bytes sent: %d\n", ret);
+        printf("Bytes sent: %d\n\n\n", ret);
 
 
     } else if (which_cmd == LS_CMD) {
         ret = send_message(sk, command, cmd_len, &sk_addr);
-        printf("Bytes sent: %d\n", ret);
+        printf("Bytes sent: %d\n\n\n", ret);
     } else if (which_cmd == CD_CMD) {
         ret = send_message(sk, command, cmd_len, &sk_addr);
-        printf("Bytes sent: %d\n", ret);
+        printf("Bytes sent: %d\n\n\n", ret);
 
         printf("Sending argument for cd\n");
         ret = send_message(sk, arg, arg_len, &sk_addr);
+        printf("Bytes sent: %d\n\n\n", ret);
 
 
     } else if (which_cmd == BRCAST_CMD) {
@@ -141,7 +149,7 @@ int main(int argc, char** argv) {
 
         printf("Sending broadcast message\n");
         ret = send_message(sk, command, cmd_len, &receiver_data);
-        printf("Bytes sent: %d\n", ret);
+        printf("Bytes sent: %d\n\n\n", ret);
 
         /* Receiving broadcast */
         /* Buffer for data */
@@ -157,7 +165,7 @@ int main(int argc, char** argv) {
 
         printf("Bytes received: %d\n", ret);
 
-        printf("Server address received from broadcast: %s\n", inet_ntoa(sender_data.sin_addr));
+        printf("Server address received from broadcast: %s\n\n\n", inet_ntoa(sender_data.sin_addr));
     }
 
     if (ret < 0) {
