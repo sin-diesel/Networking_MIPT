@@ -48,8 +48,9 @@
 #define MSGSIZE 512
 
 struct message {
+    int id;
     char cmd[CMDSIZE];
-    char msg[MSGSIZE];
+    char data[MSGSIZE];
 };
 
 /* Types of commands that can be sent to our server */
@@ -83,4 +84,4 @@ enum cmd_len {
 
 int check_input(int argc, char** argv, char** command, char** arg);
 
-int send_message(int sk, char* msg, int msg_len, struct sockaddr_in* sk_addr);
+int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);

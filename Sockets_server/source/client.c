@@ -100,28 +100,42 @@ int main(int argc, char** argv) {
 
     printf("Command length: %d\n", cmd_len);
 
+    /* For now pid is identifier */
+    pid_t pid = getpid();
+
+    /* Sending message containing command, client identifier and arguments */
+    struct message msg;
+    memcpy(&(msg.cmd), command, cmd_len);
+    memcpy(&(msg.id), &pid, sizeof(pid_t));
+    memcpy(&(msg.data), arg, arg_len);
+
+    printf("Message to be sent:\n");
+    printf("Command: %s\n", msg.cmd);
+    printf("Data: %s\n", msg.data);
+    printf("ID: %d\n", msg.id);
+
     printf("Sending command\n");
     if (which_cmd == EXIT_CMD) {
-        ret = send_message(sk, command, cmd_len, &sk_addr);
+        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
         printf("Bytes sent: %d\n\n\n", ret);
     } else if (which_cmd == PRINT_CMD) {
 
-        ret = send_message(sk, command, cmd_len, &sk_addr);
-        printf("Sending message\n");
-        ret = send_message(sk, arg, arg_len, &sk_addr);
+        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+        // printf("Sending message\n");
+        // ret = send_message(sk, arg, arg_len, &sk_addr);
         printf("Bytes sent: %d\n\n\n", ret);
 
 
     } else if (which_cmd == LS_CMD) {
-        ret = send_message(sk, command, cmd_len, &sk_addr);
+        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
         printf("Bytes sent: %d\n\n\n", ret);
     } else if (which_cmd == CD_CMD) {
-        ret = send_message(sk, command, cmd_len, &sk_addr);
+        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
         printf("Bytes sent: %d\n\n\n", ret);
 
-        printf("Sending argument for cd\n");
-        ret = send_message(sk, arg, arg_len, &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
+        // printf("Sending argument for cd\n");
+        // ret = send_message(sk, arg, arg_len, &sk_addr);
+        // printf("Bytes sent: %d\n\n\n", ret);
 
 
     } else if (which_cmd == BRCAST_CMD) {
@@ -148,7 +162,7 @@ int main(int argc, char** argv) {
         }
 
         printf("Sending broadcast message\n");
-        ret = send_message(sk, command, cmd_len, &receiver_data);
+        ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
         printf("Bytes sent: %d\n\n\n", ret);
 
         /* Receiving broadcast */

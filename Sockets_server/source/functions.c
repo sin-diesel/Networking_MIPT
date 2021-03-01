@@ -51,7 +51,7 @@ int check_input(int argc, char** argv, char** command, char** arg) {
     return BAD_CMD;
 }
 
-int send_message(int sk, char* msg, int msg_len, struct sockaddr_in* sk_addr) {
+int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr) {
     int ret = sendto(sk, msg, msg_len, 0, (struct sockaddr*) sk_addr, sizeof(*sk_addr));
     if (ret < 0) {
         ERROR(errno);

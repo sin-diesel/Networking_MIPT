@@ -95,21 +95,23 @@ int main() {
         #ifdef UDP
 
         char buf[BUFSIZ];
-        char msg[BUFSIZ];
+        //char msg[BUFSIZ];
+        struct message msg;
 
         /* Receiving message from client */
         struct sockaddr_in client_data;
         socklen_t addrlen = sizeof(client_data);
 
-        ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &client_data, &addrlen);
+        ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &client_data, &addrlen);
         if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
 
         printf("Bytes received: %d\n", ret);
+        printf("Message size expected: %ld\n", sizeof(struct message));
         /* Null terminating buf */
-        buf[ret] = '\0';
+        //buf[ret] = '\0';
 
         //char receiver_ip[BUFSIZ];
         /* Taking address and handing over to inet_ntoa function */
@@ -129,23 +131,23 @@ int main() {
 
         /* Decide which message was sent */
 
-        if (strncmp(buf, PRINT, PRINT_LEN) == 0) {
+        if (strncmp(msg.cmd, PRINT, PRINT_LEN) == 0) {
             /* read message and print it */
-            ret = read(sk, msg, BUFSIZ);
-            if (ret < 0 || ret >= BUFSIZ) {
-                printf("Unexpected read error or overflow %d\n", ret);
-                return -1;
-            }
-            msg[ret] = '\0';
+            // ret = read(sk, msg, BUFSIZ);
+            // if (ret < 0 || ret >= BUFSIZ) {
+            //     printf("Unexpected read error or overflow %d\n", ret);
+            //     return -1;
+            // }
+            // msg[ret] = '\0';
 
             /* Print message */
-            printf("Message from client: %s\n", msg);
-        } else if (strncmp(buf, EXIT, EXIT_LEN) == 0) {
+            printf("Message from client: %s\n", msg.data);
+        } else if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
             /* Closing server */
                 close(sk);
                 unlink(PATH);
                 exit(EXIT_SUCCESS);
-        } else if (strncmp(buf, LS, LS_LEN) == 0) {
+        } else if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
             /* Printing current directory */
             printf("Executing LS command\n");
             int pid = fork();
@@ -174,7 +176,7 @@ int main() {
             //     ERROR(errno);
             // }
 
-        } else if (strncmp(buf, BROAD, BROAD_LEN) == 0) {
+        } else if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
             printf("Broadcasting server IP\n");
             char message[] = "Reply to client";
             ret =  sendto(sk, &message, sizeof(message), 0,
@@ -186,7 +188,7 @@ int main() {
 
         }else {
             printf("Command from client not recognized\n");
-            printf("Actual buffer sent: %s\n", buf);
+            printf("Actual command sent: %s\n", msg.cmd);
         }
 
         #endif
