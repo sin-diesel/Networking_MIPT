@@ -67,7 +67,11 @@ int lookup(int* id_map, int n_ids, pid_t id) {
     return 0;
 }
 
-// void* handle_connection(pthread_t* client) {
+void* handle_connection(int* client_pipe) {
+    while (1) {
+        /* Read data from pipe and determine what to do with client */
+    }
 
-// }
+    return NULL;
+}
 

@@ -1,7 +1,7 @@
 
 CC = gcc
 IDIR = ./include
-CCFLAGS = -g -Wall -std=c11 -I $(IDIR)
+CCFLAGS = -g -Wall -std=c11 -pthread -I $(IDIR)
 SRC_DIR = source
 SOURCES = server.c client.c
 HEADERS = my_server.h

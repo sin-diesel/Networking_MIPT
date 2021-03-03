@@ -75,7 +75,14 @@ int main() {
     }
 
     /* pipes for transferring data */
-    struct pip pipes[MAXCLIENTS];
+    int pipes[MAXCLIENTS * 2];
+    // Creating pipes for clients 
+    // for (int i = 0; i < MAXCLIENTS * 2; i += 2){
+    //     ret = pipe(&pipes[i]);
+    //     if (ret < 0) {
+    //         ERROR(errno);
+    //     }
+    // }
 
     #endif
 
@@ -142,6 +149,20 @@ int main() {
             id_map[msg.id] = 1;
         } else {
             printf("Old client: %d\n", msg.id);
+            /* Transfer data to pipe after creation */
+            ret = pipe(&pipes[msg.id]);
+            if (ret < 0) {
+                ERROR(errno);
+            }
+            
+            int pipe_in = pipes[msg.id + 1];
+            ret = write(pipe_in, &msg, sizeof(struct message));
+            printf("Bytes written to pipe: %d\n", ret);
+            if (ret != sizeof(struct message)) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
         }
 
         /* Transfer the data to corresponding thread */
@@ -209,6 +230,7 @@ int main() {
         }
 
         #endif
+        
 
             
 
