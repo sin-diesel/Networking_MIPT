@@ -147,6 +147,15 @@ int main() {
         if (exists == 0) {
             printf("New client: %d\n", msg.id);
             id_map[msg.id] = 1;
+
+            int pipe_out = pipes[0];
+            /* Handing over this client to a new thread */
+            //ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
         } else {
             printf("Old client: %d\n", msg.id);
             /* Transfer data to pipe after creation */
@@ -154,8 +163,8 @@ int main() {
             if (ret < 0) {
                 ERROR(errno);
             }
-            
-            int pipe_in = pipes[msg.id + 1];
+
+            int pipe_in = pipes[1];
             ret = write(pipe_in, &msg, sizeof(struct message));
             printf("Bytes written to pipe: %d\n", ret);
             if (ret != sizeof(struct message)) {

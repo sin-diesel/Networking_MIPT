@@ -97,6 +97,6 @@ int check_input(int argc, char** argv, char** command, char** arg);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 
-void* handle_connection(int* client_pipe);
+void* handle_connection(void* client_pipe);
 
 int lookup(int* id_map, int n_ids, pid_t id);
