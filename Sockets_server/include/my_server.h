@@ -50,15 +50,12 @@
 #define CMDSIZE 32
 #define MSGSIZE 512
 
+/* client_data to send info back to client */
 struct message {
     int id;
     char cmd[CMDSIZE];
     char data[MSGSIZE];
-};
-
-struct pip {
-    int rd;
-    int wr;
+    struct sockaddr_in client_data;
 };
 
 /* Types of commands that can be sent to our server */

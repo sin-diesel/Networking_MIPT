@@ -116,6 +116,7 @@ int main() {
 
         char buf[BUFSIZ];
         struct message msg;
+        memset(&msg, '\0', sizeof(struct message));
 
         /* Receiving message from client */
         struct sockaddr_in client_data;
@@ -126,8 +127,11 @@ int main() {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
+        /* Copy client address manually */
+        memcpy(&(msg.client_data), &client_data, sizeof(struct sockaddr_in));
 
-        printf("Bytes received: %d\n", ret);
+
+        printf("\n\n\nBytes received: %d\n", ret);
         printf("Message size expected: %ld\n", sizeof(struct message));
 
         char* addr = inet_ntoa(client_data.sin_addr);
@@ -149,15 +153,24 @@ int main() {
             id_map[msg.id] = 1;
 
              /* Create pipe */
-            ret = pipe(pipes);
+            ret = pipe(pipes + msg.id);
             if (ret < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);
             }
 
-            int pipe_out = pipes[0];
+            int pipe_out = pipes[msg.id ];
             /* Handing over this client to a new thread */
             ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
+
+            int pipe_in = pipes[msg.id + 1];
+            ret = write(pipe_in, &msg, sizeof(struct message));
+            printf("Bytes written to pipe: %d\n", ret);
+            if (ret != sizeof(struct message)) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+            
             if (ret < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);
@@ -167,7 +180,7 @@ int main() {
             printf("Old client: %d\n", msg.id);
 
             /* Transfer data to pipe after creation */
-            int pipe_in = pipes[1];
+            int pipe_in = pipes[msg.id + 1];
             ret = write(pipe_in, &msg, sizeof(struct message));
             printf("Bytes written to pipe: %d\n", ret);
             if (ret != sizeof(struct message)) {
@@ -236,11 +249,12 @@ int main() {
                 exit(EXIT_FAILURE);
             }
 
-        }else {
+        } else {
             printf("Command from client not recognized\n");
             printf("Actual command sent: %s\n", msg.cmd);
         }
-
+        
+        printf("\n\n\n");
         #endif
         
 

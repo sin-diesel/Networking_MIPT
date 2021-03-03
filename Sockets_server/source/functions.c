@@ -75,7 +75,9 @@ void* handle_connection(void* client_pipe) {
     while (1) {
         /* Read data from pipe and determine what to do with client */
         struct message msg;
+        memset(&msg, '\0', sizeof(struct message));
 
+        /* read message data */
         ret = read(*((int*) client_pipe), &msg, sizeof(struct message));
         printf("Bytes read from pipe: %d\n", ret);
         if (ret != sizeof(struct message)) {
@@ -86,10 +88,35 @@ void* handle_connection(void* client_pipe) {
             exit(EXIT_FAILURE);
         }
 
+        /* Print info */
         printf("Message received:\n");
         printf("ID: %d\n", msg.id);
         printf("Command: %s\n", msg.cmd);
         printf("Data: %s\n", msg.data);
+
+        char* addr = inet_ntoa(msg.client_data.sin_addr);
+        if (addr == NULL) {
+            printf("Client address invalid\n");
+        }
+
+        printf("Client address: %s\n", addr);
+
+        /* Here we will simply use pipe to transfer data */
+        /* Or maybe use ports? */
+
+        int sk = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sk < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+        ret = send_message(sk, &msg, sizeof(struct message), &msg.client_data);
+        if (ret < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+        close(sk);
     }
 
     return NULL;
