@@ -69,22 +69,27 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 
 void* handle_connection(void* client_pipe) {
     int ret = 0;
+
     printf("Entered new thread\n");
-    //fflush(stdout);
+
     while (1) {
         /* Read data from pipe and determine what to do with client */
         struct message msg;
-        // ret = read(*((int*) client_pipe), &msg, sizeof(struct message));
-        // printf("Bytes read from pipe: %d\n", ret);
-        // if (ret != sizeof(struct message)) {
-        //     ERROR(errno);
-        //     exit(EXIT_FAILURE);
-        // }
 
-        // printf("Message received: \n");
-        // printf("Data: %s\n", msg.data);
-        // printf("ID: %d\n", msg.id);
-        // printf("Command: %s\n", msg.cmd);
+        ret = read(*((int*) client_pipe), &msg, sizeof(struct message));
+        printf("Bytes read from pipe: %d\n", ret);
+        if (ret != sizeof(struct message)) {
+            printf("Error reading from pipe\n");
+            if (ret < 0) {
+                ERROR(errno);
+            }
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Message received:\n");
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
     }
 
     return NULL;

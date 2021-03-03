@@ -135,7 +135,7 @@ int main() {
             printf("Client address invalid\n");
         }
 
-        printf("Client addr: %s\n", addr);
+        printf("Client address: %s\n", addr);
         printf("Client port: %d\n", htons(client_data.sin_port));
         if (ret < 0) {
             ERROR(errno);
@@ -148,9 +148,16 @@ int main() {
             printf("New client: %d\n", msg.id);
             id_map[msg.id] = 1;
 
+             /* Create pipe */
+            ret = pipe(pipes);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
             int pipe_out = pipes[0];
             /* Handing over this client to a new thread */
-            //ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
+            ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
             if (ret < 0) {
                 ERROR(errno);
                 exit(EXIT_FAILURE);
@@ -158,12 +165,8 @@ int main() {
 
         } else {
             printf("Old client: %d\n", msg.id);
-            /* Transfer data to pipe after creation */
-            ret = pipe(&pipes[msg.id]);
-            if (ret < 0) {
-                ERROR(errno);
-            }
 
+            /* Transfer data to pipe after creation */
             int pipe_in = pipes[1];
             ret = write(pipe_in, &msg, sizeof(struct message));
             printf("Bytes written to pipe: %d\n", ret);
