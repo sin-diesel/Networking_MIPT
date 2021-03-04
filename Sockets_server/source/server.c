@@ -76,13 +76,6 @@ int main() {
 
     /* pipes for transferring data */
     int pipes[MAXCLIENTS * 2];
-    // Creating pipes for clients 
-    // for (int i = 0; i < MAXCLIENTS * 2; i += 2){
-    //     ret = pipe(&pipes[i]);
-    //     if (ret < 0) {
-    //         ERROR(errno);
-    //     }
-    // }
 
     #endif
 
@@ -159,34 +152,34 @@ int main() {
                 exit(EXIT_FAILURE);
             }
 
-            int pipe_out = pipes[msg.id ];
+            int pipe_out = pipes[msg.id];
             /* Handing over this client to a new thread */
             ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
 
             int pipe_in = pipes[msg.id + 1];
-            ret = write(pipe_in, &msg, sizeof(struct message));
-            printf("Bytes written to pipe: %d\n", ret);
-            if (ret != sizeof(struct message)) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-            
-            if (ret < 0) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
+            // ret = write(pipe_in, &msg, sizeof(struct message));
+            // printf("Bytes written to pipe: %d\n", ret);
+            // if (ret != sizeof(struct message)) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
 
         } else {
             printf("Old client: %d\n", msg.id);
 
             /* Transfer data to pipe after creation */
             int pipe_in = pipes[msg.id + 1];
-            ret = write(pipe_in, &msg, sizeof(struct message));
-            printf("Bytes written to pipe: %d\n", ret);
-            if (ret != sizeof(struct message)) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
+            // ret = write(pipe_in, &msg, sizeof(struct message));
+            // printf("Bytes written to pipe: %d\n", ret);
+            // if (ret != sizeof(struct message)) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
 
         }
 
@@ -202,6 +195,18 @@ int main() {
             //     return -1;
             // }
             // msg[ret] = '\0';
+            int pipe_in = pipes[msg.id + 1];
+            ret = write(pipe_in, &msg, sizeof(struct message));
+            printf("Bytes written to pipe: %d\n", ret);
+            if (ret != sizeof(struct message)) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
 
             /* Print message */
             printf("Message from client: %s\n", msg.data);
@@ -212,14 +217,79 @@ int main() {
                 exit(EXIT_SUCCESS);
         } else if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
             /* Printing current directory */
-            printf("Executing LS command\n");
-            int pid = fork();
-            if (pid == 0) {
-                execlp("ls", "ls");
+            // printf("Executing LS command\n");
+
+            // /* Redirect output to pipe and then read it */
+            // int ls_pipe[2];
+            // //close(ls_pipe[1]); // not writing
+            // ret = pipe(ls_pipe);
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+
+            // int pid = fork();
+            // if (pid < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+            // if (pid == 0) {
+            //     char cmd[] = "ls";
+            //     char* arg[2];
+            //     arg[0] = "ls";
+            //     arg[1] = NULL;
+            //     ret = dup2(ls_pipe[1], STDOUT_FILENO);
+            //     close(ls_pipe[0]); // not reading
+            //     //close(ls_pipe[1]);
+            //     if (ret < 0) {
+            //         ERROR(errno);
+            //         exit(EXIT_FAILURE);
+            //     }   
+            //     execvp(arg[0],arg); // add current directory later
+
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+            // /* read from pipe to buf */
+            // char buf[BUFSIZ];
+            // buf[BUFSIZ - 1] = '\0';
+            // ret = read(ls_pipe[0], buf, MSGSIZE);
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+            // printf("Bytes read from pipe: %d\n", ret);
+
+            // printf("LS result: %s\n", buf);
+
+            // memcpy(&(msg.data), buf, MSGSIZE);
+
+            int pipe_in = pipes[msg.id + 1];
+            ret = write(pipe_in, &msg, sizeof(struct message));
+            printf("Bytes written to client pipe: %d\n", ret);
+            if (ret != sizeof(struct message)) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
             }
 
-        } else if (strncmp(buf, CD, CD_LEN) == 0) {
+            // close(ls_pipe[0]);
+            // close(ls_pipe[1]);
+
+        } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
             printf("Executing CD command\n");
+
+            //memcpy(&(msg.data), buf, MSGSIZE);
+
+            int pipe_in = pipes[msg.id + 1];
+            ret = write(pipe_in, &msg, sizeof(struct message));
+            printf("Bytes written to client pipe: %d\n", ret);
+            if (ret != sizeof(struct message)) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
 
             // res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
             // //printf("res received: %d\n", res);

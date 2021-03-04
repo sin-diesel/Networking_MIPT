@@ -49,6 +49,7 @@
 
 #define CMDSIZE 32
 #define MSGSIZE 512
+#define MAX_PATH 1024
 
 /* client_data to send info back to client */
 struct message {
