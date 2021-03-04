@@ -4,6 +4,155 @@
 
 #include "my_server.h"
 
+
+pthread_mutex_t mutexes[MAXCLIENTS];
+
+void* handle_connection(void* memory) {
+    int ret = 0;
+
+    printf("Entered new thread\n");
+
+    char dir[MAX_PATH];
+    char* dirp = getcwd(dir, MAX_PATH);
+    if (dirp == NULL) {
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Current thread directory:%s\n", dir);
+
+    int old_id = -1;
+
+    while (1) {
+        /* Read data from pipe and determine what to do with client */
+        struct message msg;
+        //memset(&msg, '\0', sizeof(struct message));
+
+        /* read message data */
+        //ret = read(*((int*) client_pipe), &msg, sizeof(struct message));
+        /* Update info */
+        memcpy(&msg, memory, sizeof(struct message));
+        pthread_mutex_lock(&mutexes[msg.id]);
+        memcpy(&msg, memory, sizeof(struct message));
+
+
+        // printf("Bytes read from client pipe: %d\n", ret);
+        // if (ret != sizeof(struct message)) {
+        //     printf("Error reading from pipe\n");
+        //     if (ret < 0) {
+        //         ERROR(errno);
+        //     }
+        //     exit(EXIT_FAILURE);
+        // }
+
+        /* Print info */
+        printf("Message received:\n");
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
+
+        char* addr = inet_ntoa(msg.client_data.sin_addr);
+        if (addr == NULL) {
+            printf("Client address invalid\n");
+        }
+
+        printf("Client address: %s\n", addr);
+
+        /* Handle client's command */   
+        if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
+            /* Printing current directory */
+            D(printf("Executing LS command from %s directory\n", dir);)
+
+            /* Redirect output to pipe and then read it */
+            // int ls_pipe[2];
+            // //close(ls_pipe[1]); // not writing
+            // ret = pipe(ls_pipe);
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+
+
+            // int status = 0;
+
+            int pid = fork();
+            if (pid < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+            if (pid == 0) {
+                char cmd[] = "ls";
+                char* arg[3];
+                arg[0] = "ls";
+                arg[1] = dir;
+                arg[2] = NULL;
+                // ret = dup2(ls_pipe[1], STDOUT_FILENO);
+                // close(ls_pipe[0]); // not reading
+                // //close(ls_pipe[1]);
+                // if (ret < 0) {
+                //     ERROR(errno);
+                //     exit(EXIT_FAILURE);
+                // }   
+                execvp(arg[0],arg);
+
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
+            // /* read from pipe to buf */
+            // wait(&status);
+
+            // char buf[BUFSIZ];
+            // buf[BUFSIZ - 1] = '\0';
+            // ret = read(ls_pipe[0], buf, MSGSIZE);
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+
+            // printf("Bytes read from pipe: %d\n", ret);
+
+            // printf("LS result: %s\n", buf);
+
+            // memcpy(&(msg.data), buf, MSGSIZE);
+
+            // close(ls_pipe[0]);
+            // close(ls_pipe[1]);
+        } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
+            printf("Cwd: %s\n", dir);
+            memcpy((void*) dir, &msg.data, MSGSIZE);
+            printf("Changing cwd to %s\n", msg.data);
+        }
+
+        /* Here we will simply use pipe to transfer data */
+        /* Or maybe use ports? */
+
+        int sk = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sk < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+
+        printf("SENDING MESSAGE BACK TO CLIENT\n");
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
+        ret = send_message(sk, &msg, sizeof(struct message), &msg.client_data);
+        if (ret < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+        close(sk);
+        printf("MESSAGE SENT\n");
+    }
+
+    return NULL;
+}
+
+
 int main() {
 
     /* Creating and initializing socket */
@@ -71,11 +220,24 @@ int main() {
     /* Basically bitmap */
     int id_map[MAXCLIENTS];
     for (int i = 0; i < MAXCLIENTS; ++i) {
+        /* Initialize mutexes */
+        ret = pthread_mutex_init(&mutexes[i], NULL);
+        if (ret < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
         id_map[i] = 0;
     }
 
     /* pipes for transferring data */
     int pipes[MAXCLIENTS * 2];
+
+    /* memory for sharing between threads */
+    struct message* memory = (struct message*) calloc(MAXCLIENTS, sizeof(struct message));
+    if (memory == NULL) {
+        printf("Error callocing memory\n");
+        exit(EXIT_FAILURE);
+    }
 
     #endif
 
@@ -120,6 +282,8 @@ int main() {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
+
+        msg.is_new = 1;
         /* Copy client address manually */
         memcpy(&(msg.client_data), &client_data, sizeof(struct sockaddr_in));
 
@@ -146,41 +310,22 @@ int main() {
             id_map[msg.id] = 1;
 
              /* Create pipe */
-            ret = pipe(pipes + msg.id);
-            if (ret < 0) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-
-            int pipe_out = pipes[msg.id];
-            /* Handing over this client to a new thread */
-            ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, &pipe_out);
-
-            int pipe_in = pipes[msg.id + 1];
-            // ret = write(pipe_in, &msg, sizeof(struct message));
-            // printf("Bytes written to pipe: %d\n", ret);
-            // if (ret != sizeof(struct message)) {
-            //     ERROR(errno);
-            //     exit(EXIT_FAILURE);
-            // }
-
+            // ret = pipe(pipes + msg.id);
             // if (ret < 0) {
             //     ERROR(errno);
             //     exit(EXIT_FAILURE);
             // }
 
+            // int pipe_out = pipes[msg.id];
+            struct message* thread_memory = &memory[msg.id];
+            memcpy(thread_memory, &msg, sizeof(struct message));
+            /* Handing over this client to a new thread */
+            ret = pthread_create(&thread_ids[msg.id], NULL, handle_connection, thread_memory);
+
         } else {
+            struct message* thread_memory = &memory[msg.id];
+            memcpy(thread_memory, &msg, sizeof(struct message));
             printf("Old client: %d\n", msg.id);
-
-            /* Transfer data to pipe after creation */
-            int pipe_in = pipes[msg.id + 1];
-            // ret = write(pipe_in, &msg, sizeof(struct message));
-            // printf("Bytes written to pipe: %d\n", ret);
-            // if (ret != sizeof(struct message)) {
-            //     ERROR(errno);
-            //     exit(EXIT_FAILURE);
-            // }
-
         }
 
         /* Transfer the data to corresponding thread */
@@ -188,25 +333,20 @@ int main() {
         /* Decide which message was sent */
 
         if (strncmp(msg.cmd, PRINT, PRINT_LEN) == 0) {
-            /* read message and print it */
-            // ret = read(sk, msg, BUFSIZ);
-            // if (ret < 0 || ret >= BUFSIZ) {
-            //     printf("Unexpected read error or overflow %d\n", ret);
-            //     return -1;
+            // int pipe_in = pipes[msg.id + 1];
+            // ret = write(pipe_in, &msg, sizeof(struct message));
+            // printf("Bytes written to pipe: %d\n", ret);
+            // if (ret != sizeof(struct message)) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
             // }
-            // msg[ret] = '\0';
-            int pipe_in = pipes[msg.id + 1];
-            ret = write(pipe_in, &msg, sizeof(struct message));
-            printf("Bytes written to pipe: %d\n", ret);
-            if (ret != sizeof(struct message)) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-
-            if (ret < 0) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
+            // if (ret < 0) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
+            struct message* thread_memory = &memory[msg.id];
+            memcpy(thread_memory, &msg, sizeof(struct message));
+            pthread_mutex_unlock(&mutexes[msg.id]);
 
             /* Print message */
             printf("Message from client: %s\n", msg.data);
@@ -217,9 +357,9 @@ int main() {
                 exit(EXIT_SUCCESS);
         } else if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
             /* Printing current directory */
-            // printf("Executing LS command\n");
+            printf("Executing LS command\n");
 
-            // /* Redirect output to pipe and then read it */
+            /* Redirect output to pipe and then read it */
             // int ls_pipe[2];
             // //close(ls_pipe[1]); // not writing
             // ret = pipe(ls_pipe);
@@ -238,6 +378,7 @@ int main() {
             //     char cmd[] = "ls";
             //     char* arg[2];
             //     arg[0] = "ls";
+            //     arg[1] =
             //     arg[1] = NULL;
             //     ret = dup2(ls_pipe[1], STDOUT_FILENO);
             //     close(ls_pipe[0]); // not reading
@@ -267,47 +408,35 @@ int main() {
 
             // memcpy(&(msg.data), buf, MSGSIZE);
 
-            int pipe_in = pipes[msg.id + 1];
-            ret = write(pipe_in, &msg, sizeof(struct message));
-            printf("Bytes written to client pipe: %d\n", ret);
-            if (ret != sizeof(struct message)) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
+            // int pipe_in = pipes[msg.id + 1];
+            // ret = write(pipe_in, &msg, sizeof(struct message));
+            // printf("Bytes written to client pipe: %d\n", ret);
+            // if (ret != sizeof(struct message)) {
+            //     ERROR(errno);
+            //     exit(EXIT_FAILURE);
+            // }
 
             // close(ls_pipe[0]);
             // close(ls_pipe[1]);
 
+            struct message* thread_memory = &memory[msg.id];
+            memcpy(thread_memory, &msg, sizeof(struct message));
+            pthread_mutex_unlock(&mutexes[msg.id]);
+
         } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
-            printf("Executing CD command\n");
+            // printf("Executing CD command\n");
 
-            //memcpy(&(msg.data), buf, MSGSIZE);
-
-            int pipe_in = pipes[msg.id + 1];
-            ret = write(pipe_in, &msg, sizeof(struct message));
-            printf("Bytes written to client pipe: %d\n", ret);
-            if (ret != sizeof(struct message)) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-
-            // res = recvfrom(sk, buf, BUFSZ, 0, NULL, NULL);
-            // //printf("res received: %d\n", res);
-            // buf[res] = '\0';
-            // if (res < 0) {
+            // int pipe_in = pipes[msg.id + 1];
+            // ret = write(pipe_in, &msg, sizeof(struct message));
+            // printf("Bytes written to client pipe: %d\n", ret);
+            // if (ret != sizeof(struct message)) {
             //     ERROR(errno);
             //     exit(EXIT_FAILURE);
             // }
-            // printf("Arg: %s\n", buf);
-            // int arg_len = strlen(buf);
 
-            // /* Null terminate the string so \n does not interfere */
-            // buf[arg_len] = '\0';
-
-            // res = chdir(buf);
-            // if (res < 0) {
-            //     ERROR(errno);
-            // }
+            struct message* thread_memory = &memory[msg.id];
+            memcpy(thread_memory, &msg, sizeof(struct message));
+            pthread_mutex_unlock(&mutexes[msg.id]);
 
         } else if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
             printf("Broadcasting server IP\n");

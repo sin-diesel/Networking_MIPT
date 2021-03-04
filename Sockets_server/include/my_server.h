@@ -36,7 +36,7 @@
 //#define TCP
 
 /* Debugging macros */
-#define DEBUG 0
+#define DEBUG 1
 #define D(expr) if (DEBUG) { expr };
 #define ERROR(error) fprintf(stderr, "Error in line %d, function %s: "         \
                                     "%s\n", __LINE__, __func__, strerror(error)) \
@@ -49,11 +49,13 @@
 #define BROAD "--broadcast"
 
 #define CMDSIZE 32
-#define MSGSIZE 1024
+#define MSGSIZE 512
 #define MAX_PATH 1024
+
 
 /* client_data to send info back to client */
 struct message {
+    int is_new;    
     int id;
     char cmd[CMDSIZE];
     char data[MSGSIZE];
@@ -88,6 +90,8 @@ enum cmd_len {
 
 /* Maximum amount of clients */
 #define MAXCLIENTS 100000
+
+extern pthread_mutex_t mutexes[];
 
 /* Maximum amount of pending requests */
 #define MAX_QUEUE 20
