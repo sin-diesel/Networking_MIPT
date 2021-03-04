@@ -70,7 +70,7 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 void* handle_connection(void* client_pipe) {
     int ret = 0;
 
-    printf("Entered new thread\n");
+    D(printf("Entered new thread\n");)
 
     char dir[MAX_PATH];
     char* dirp = getcwd(dir, MAX_PATH);
@@ -79,13 +79,7 @@ void* handle_connection(void* client_pipe) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Current thread directory:%s\n", dir);
-
-    int sk = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sk < 0) {
-            ERROR(errno);
-            exit(EXIT_FAILURE);
-        }
+    D(printf("Current thread directory:%s\n", dir);)
 
     while (1) {
         /* Read data from pipe and determine what to do with client */
@@ -94,9 +88,9 @@ void* handle_connection(void* client_pipe) {
 
         /* read message data */
         ret = read(*((int*) client_pipe), &msg, sizeof(struct message));
-        printf("Bytes read from pipe: %d\n", ret);
+        D(printf("Bytes read from client pipe: %d\n", ret);)
         if (ret != sizeof(struct message)) {
-            printf("Error reading from pipe\n");
+            D(printf("Error reading from pipe\n");)
             if (ret < 0) {
                 ERROR(errno);
             }
@@ -104,22 +98,22 @@ void* handle_connection(void* client_pipe) {
         }
 
         /* Print info */
-        printf("Message received:\n");
-        printf("ID: %d\n", msg.id);
-        printf("Command: %s\n", msg.cmd);
-        printf("Data: %s\n", msg.data);
+        D(printf("Message received:\n");)
+        D(printf("ID: %d\n", msg.id);)
+        D(printf("Command: %s\n", msg.cmd);)
+        D(printf("Data: %s\n", msg.data);)
 
         char* addr = inet_ntoa(msg.client_data.sin_addr);
         if (addr == NULL) {
             printf("Client address invalid\n");
         }
 
-        printf("Client address: %s\n", addr);
+        D(printf("Client address: %s\n", addr);)
 
         /* Handle client's command */   
         if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
             /* Printing current directory */
-            printf("Executing LS command from %s directory\n", dir);
+            D(printf("Executing LS command from %s directory\n", dir);)
 
             /* Redirect output to pipe and then read it */
             int ls_pipe[2];
@@ -130,6 +124,9 @@ void* handle_connection(void* client_pipe) {
                 exit(EXIT_FAILURE);
             }
 
+
+
+            int status = 0;
 
             int pid = fork();
             if (pid < 0) {
@@ -149,13 +146,15 @@ void* handle_connection(void* client_pipe) {
                     ERROR(errno);
                     exit(EXIT_FAILURE);
                 }   
-                execvp(arg[0],arg); // add current directory later
+                execvp(arg[0],arg);
 
                 ERROR(errno);
                 exit(EXIT_FAILURE);
             }
 
             /* read from pipe to buf */
+            wait(&status);
+
             char buf[BUFSIZ];
             buf[BUFSIZ - 1] = '\0';
             ret = read(ls_pipe[0], buf, MSGSIZE);
@@ -174,21 +173,32 @@ void* handle_connection(void* client_pipe) {
             close(ls_pipe[1]);
         } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
             memcpy((void*) dir, &msg.data, MSGSIZE);
-            printf("Changing cwd to %s\n", msg.data);
+            D(printf("Changing cwd to %s\n", msg.data);)
         }
 
         /* Here we will simply use pipe to transfer data */
         /* Or maybe use ports? */
 
+        int sk = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sk < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+
+        printf("SENDING MESSAGE BACK TO CLIENT\n");
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
         ret = send_message(sk, &msg, sizeof(struct message), &msg.client_data);
         if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
 
+        close(sk);
+        printf("MESSAGE SENT\n");
     }
-
-    close(sk);
 
     return NULL;
 }

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 /* for sockets */
 #include <sys/socket.h>
@@ -35,7 +36,7 @@
 //#define TCP
 
 /* Debugging macros */
-#define DEBUG 1
+#define DEBUG 0
 #define D(expr) if (DEBUG) { expr };
 #define ERROR(error) fprintf(stderr, "Error in line %d, function %s: "         \
                                     "%s\n", __LINE__, __func__, strerror(error)) \
@@ -48,7 +49,7 @@
 #define BROAD "--broadcast"
 
 #define CMDSIZE 32
-#define MSGSIZE 512
+#define MSGSIZE 1024
 #define MAX_PATH 1024
 
 /* client_data to send info back to client */

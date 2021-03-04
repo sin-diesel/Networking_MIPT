@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
             struct message msg;
             struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);    
+            socklen_t addrlen = sizeof(sender_data);
             
             ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
             if (ret < 0) {
@@ -188,6 +188,23 @@ int main(int argc, char** argv) {
         } else if (which_cmd == CD_CMD) {
             ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
             printf("Bytes sent: %d\n\n\n", ret);
+
+            struct message msg;
+            struct sockaddr_in sender_data;
+            socklen_t addrlen = sizeof(sender_data);
+            
+            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
+            if (ret < 0) {
+                ERROR(errno);
+                return -1;
+            }
+
+            printf("Bytes received: %d\n", ret);
+            printf("Message received:\n");
+            printf("ID: %d\n", msg.id);
+            printf("Command: %s\n", msg.cmd);
+            printf("Data: %s\n", msg.data);
+
 
             // printf("Sending argument for cd\n");
             // ret = send_message(sk, arg, arg_len, &sk_addr);
