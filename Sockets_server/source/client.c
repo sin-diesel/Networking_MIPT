@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
             arg_len = strlen(arg);
         }
 
-        printf("Command length: %d\n", cmd_len);
+        D(printf("Command length: %d\n", cmd_len));
 
         /* For now pid is identifier */
         pid_t pid = getpid();
@@ -132,12 +132,10 @@ int main(int argc, char** argv) {
         memcpy(&(msg.id), &pid, sizeof(pid_t));
         memcpy(&(msg.data), arg, arg_len);
 
-        printf("Message to be sent:\n");
-        printf("Command: %s\n", msg.cmd);
-        printf("Data: %s\n", msg.data);
-        printf("ID: %d\n", msg.id);
+        D(printf("Message to be sent:\n"));
+        print_info(&msg);
 
-        printf("Sending command\n");
+        D(printf("Sending command\n"));
         if (which_cmd == EXIT_CMD) {
             ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
             printf("Bytes sent: %d\n\n\n", ret);
@@ -263,9 +261,6 @@ int main(int argc, char** argv) {
         }
         printf("Command entered: %s\n", command);
     }
-
-    //sleep(3);
-
     close(sk);
 
     #endif

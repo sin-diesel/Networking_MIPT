@@ -36,26 +36,28 @@
 //#define TCP
 
 /* Debugging macros */
-#define DEBUG 1
-#define D(expr) if (DEBUG) { expr };
+#define DEBUG 0
+#define D(expr) if (DEBUG) { expr; }
 #define ERROR(error) fprintf(stderr, "Error in line %d, function %s: "         \
                                     "%s\n", __LINE__, __func__, strerror(error)) \
 
-/* commands that a client can send to a server */
+/* Commands that a client can send to a server */
 #define PRINT "--print"
 #define EXIT "--exit"
 #define LS "ls"
 #define CD "cd"
 #define BROAD "--broadcast"
 
+/* Command and message size */
 #define CMDSIZE 32
-#define MSGSIZE 512
-#define MAX_PATH 1024
+#define MSGSIZE 1024
+
+/* Max path that can be sent via cd command */
+#define MAXPATH 1024
 
 
-/* client_data to send info back to client */
-struct message {
-    int is_new;    
+/* Client_data field to send info back to client */
+struct message {    
     int id;
     char cmd[CMDSIZE];
     char data[MSGSIZE];
@@ -74,11 +76,11 @@ enum cmds {
 
 /* Lengths of commands */
 enum cmd_len {
-    PRINT_LEN = 7,
-    EXIT_LEN = 6,
-    LS_LEN = 2,
-    CD_LEN = 2,
-    BROAD_LEN = 11,
+    PRINT_LEN = sizeof(PRINT) - 1,
+    EXIT_LEN = sizeof(EXIT) - 1,
+    LS_LEN = sizeof(LS) - 1,
+    CD_LEN = sizeof(CD) - 1 ,
+    BROAD_LEN = sizeof(BROAD) - 1,
 };
 
 
@@ -91,10 +93,11 @@ enum cmd_len {
 /* Maximum amount of clients */
 #define MAXCLIENTS 100000
 
-extern pthread_mutex_t mutexes[];
-
 /* Maximum amount of pending requests */
 #define MAX_QUEUE 20
+
+/* Mutexes which are responsible for threads */
+extern pthread_mutex_t mutexes[];
 
 int check_input(int argc, char** argv, char** command, char** arg);
 
@@ -103,3 +106,5 @@ int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* s
 void* handle_connection(void* client_pipe);
 
 int lookup(int* id_map, int n_ids, pid_t id);
+
+void print_info(struct message* msg);

@@ -1,5 +1,13 @@
 #include "my_server.h"
 
+
+/* Print message info */
+void print_info(struct message* msg) {
+    printf("ID: %d\n", msg->id);
+    printf("Command: %s\n", msg->cmd);
+    printf("Data: %s\n", msg->data);
+}
+
 /* return number of command to be sent to server */
 int check_input(int argc, char** argv, char** command, char** arg) {
     
