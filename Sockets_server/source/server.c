@@ -64,17 +64,17 @@ void* handle_connection(void* memory) {
             D(printf("Executing LS command from %s directory\n", dir);)
 
             /* Redirect output to pipe and then read it */
-            // int ls_pipe[2];
-            // //close(ls_pipe[1]); // not writing
-            // ret = pipe(ls_pipe);
-            // if (ret < 0) {
-            //     ERROR(errno);
-            //     exit(EXIT_FAILURE);
-            // }
+            int ls_pipe[2];
+            //close(ls_pipe[1]); // not writing
+            ret = pipe(ls_pipe);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
 
 
 
-            // int status = 0;
+            int status = 0;
 
             int pid = fork();
             if (pid < 0) {
@@ -87,13 +87,13 @@ void* handle_connection(void* memory) {
                 arg[0] = "ls";
                 arg[1] = dir;
                 arg[2] = NULL;
-                // ret = dup2(ls_pipe[1], STDOUT_FILENO);
-                // close(ls_pipe[0]); // not reading
-                // //close(ls_pipe[1]);
-                // if (ret < 0) {
-                //     ERROR(errno);
-                //     exit(EXIT_FAILURE);
-                // }   
+                ret = dup2(ls_pipe[1], STDOUT_FILENO);
+                close(ls_pipe[0]); // not reading
+                //close(ls_pipe[1]);
+                if (ret < 0) {
+                    ERROR(errno);
+                    exit(EXIT_FAILURE);
+                }   
                 execvp(arg[0],arg);
 
                 ERROR(errno);
@@ -101,24 +101,24 @@ void* handle_connection(void* memory) {
             }
 
             // /* read from pipe to buf */
-            // wait(&status);
+            wait(&status);
 
-            // char buf[BUFSIZ];
-            // buf[BUFSIZ - 1] = '\0';
-            // ret = read(ls_pipe[0], buf, MSGSIZE);
-            // if (ret < 0) {
-            //     ERROR(errno);
-            //     exit(EXIT_FAILURE);
-            // }
+            char buf[BUFSIZ];
+            buf[BUFSIZ - 1] = '\0';
+            ret = read(ls_pipe[0], buf, MSGSIZE);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
 
-            // printf("Bytes read from pipe: %d\n", ret);
+            printf("Bytes read from pipe: %d\n", ret);
 
-            // printf("LS result: %s\n", buf);
+            printf("LS result: %s\n", buf);
 
-            // memcpy(&(msg.data), buf, MSGSIZE);
+            memcpy(&(msg.data), buf, MSGSIZE);
 
-            // close(ls_pipe[0]);
-            // close(ls_pipe[1]);
+            close(ls_pipe[0]);
+            close(ls_pipe[1]);
         } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
             printf("Cwd: %s\n", dir);
             memcpy((void*) dir, &msg.data, MSGSIZE);
