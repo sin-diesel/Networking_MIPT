@@ -121,4 +121,4 @@ int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
 
-void start_shell(char* buf);
+void start_shell(char* buf, char* cmd);

@@ -50,6 +50,8 @@ int check_input(int argc, char** argv, char** command, char** arg) {
             return PRINT_CMD;
         } else if (strcmp(*command, CD) == 0) {
             return CD_CMD;
+        } else if (strcmp(*command, SHELL) == 0) {
+            return SHELL_CMD;
         }
     }
 
@@ -76,7 +78,7 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 }
 
 
-void start_shell(char* buf) {
+void start_shell(char* buf, char* cmd) {
     printf("Starting shell on server\n");
     int ret = 0;
 
@@ -125,13 +127,26 @@ void start_shell(char* buf) {
         dup2(resfd, STDIN_FILENO);
         dup2(resfd, STDOUT_FILENO);
         dup2(resfd, STDERR_FILENO);
+
+        ret = setsid();
+        if (ret < 0) {
+            ERROR(errno);
+        }
+
         execl("/bin/bash", "/bin/bash", NULL);
         exit(EXIT_FAILURE);
     }
 
+    /* Add \n to the end of command assuming we have enough space */
+    int cmd_len = strlen(cmd);
+    cmd[cmd_len] = '\n';
+    cmd[cmd_len + 1] = '\0';
+    cmd_len = cmd_len + 1;
+
+    printf("Command to be executed:%s", cmd);
     /* Writing command */
-    ret = write(fd, "echo $$\n", sizeof("echo $$\n"));
-    if (ret != sizeof("echo $$\n")) {
+    ret = write(fd, cmd, cmd_len);
+    if (ret != cmd_len) {
         printf("Error writing to fd\n");
         ERROR(errno);
         exit(EXIT_FAILURE);
@@ -141,7 +156,7 @@ void start_shell(char* buf) {
     struct pollfd pollfds;
     pollfds.fd = fd;
     pollfds.events = POLLIN;
-    int wait_ms = 1;
+    int wait_ms = 1000;
 
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
         if (pollfds.revents == POLLIN) {

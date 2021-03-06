@@ -102,12 +102,18 @@ void* handle_connection(void* memory) {
             memcpy(&(msg.data), buf, MSGSIZE);
             close(ls_pipe[0]);
             close(ls_pipe[1]);
+            
         } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
+
             D(printf("Cwd: %s\n", dir));
             memcpy((void*) dir, &msg.data, MSGSIZE);
             D(printf("Changing cwd to %s\n", msg.data));
+
         } else if (strncmp(msg.cmd, SHELL, SHELL_LEN) == 0) {
-            start_shell(buf);
+
+            printf("Message data to be executed in shell:%s\n", msg.data);
+            start_shell(buf, msg.data);
+
             /* Copy data from shell return buf to msg */
             memcpy(&(msg.data), buf, MSGSIZE);
             printf("Data ready to be sent to client: %s\n", msg.data);
