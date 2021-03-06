@@ -1,11 +1,20 @@
 #pragma once
 
+
+#define _XOPEN_SOURCE 600
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/poll.h>
+#include <termios.h>
 
 /* for sockets */
 #include <sys/socket.h>
@@ -47,6 +56,7 @@
 #define LS "ls"
 #define CD "cd"
 #define BROAD "--broadcast"
+#define SHELL "--shell"
 
 /* Command and message size */
 #define CMDSIZE 32
@@ -71,6 +81,7 @@ enum cmds {
     LS_CMD,
     CD_CMD,
     BRCAST_CMD,
+    SHELL_CMD,
     BAD_CMD
 };
 
@@ -81,6 +92,7 @@ enum cmd_len {
     LS_LEN = sizeof(LS) - 1,
     CD_LEN = sizeof(CD) - 1 ,
     BROAD_LEN = sizeof(BROAD) - 1,
+    SHELL_LEN = sizeof(SHELL) - 1,
 };
 
 
@@ -108,3 +120,5 @@ void* handle_connection(void* client_pipe);
 int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
+
+void start_shell(char* buf);

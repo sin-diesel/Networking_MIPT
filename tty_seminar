@@ -1,0 +1,17 @@
+1) tty - similar to terminal, it was called that earlier
+
+2) tty - типо клавиатура и устройство в одном
+
+3) pty - pseudo tty 
+
+4) /dev/ptmx - устройство для создания псевдотерминалов
+
+5) fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
+
+6) grantpt(fd) - дополнительные копии
+
+7) char* path = ptsname(fd);
+
+8) resfd = open(path, O_RDWR); ( затем fork + dup2 + exec("bin/bash"))
+
+9) bash - shell that writes and printf from terminal

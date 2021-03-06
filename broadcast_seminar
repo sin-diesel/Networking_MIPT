@@ -1,0 +1,18 @@
+
+
+Broadcast - send to several IP addresses
+1) 255.255.255.255 - broadcast. Send to this IP and message will get to everyone. INADDR_BROADCAST
+Local area network broadcast
+
+2) for example: 192.168.1.0 / 24 - first 24 bytes are unchanged.
+				0.0.0.255
+				OR
+
+				brd 192.168.1.255 - отсылает и выше тоже по роутерам.
+
+3) INADDR_LOOPBACK - адрес самого себя, общаются между собой но
+через протоколы интернета.
+4) broadcast - inform all
+multicast - inform some
+unicast - 
+

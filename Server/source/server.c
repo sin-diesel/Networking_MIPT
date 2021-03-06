@@ -24,6 +24,10 @@ void* handle_connection(void* memory) {
     while (1) {
         struct message msg;
 
+        /* Buffer for maintaining data */
+        char buf[BUFSIZ];
+        buf[BUFSIZ - 1] = '\0';
+
         /* Copy data from memory */
         memcpy(&msg, memory, sizeof(struct message));
         pthread_mutex_lock(&mutexes[msg.id]);
@@ -38,7 +42,8 @@ void* handle_connection(void* memory) {
             fprintf(stderr, "Client address invalid\n");
         }
 
-        D(printf("Client address: %s\n", addr));
+        printf("Client address: %s\n", addr);
+        printf("Client port: %d\n", msg.client_data.sin_port);
 
         /* Handle client's command */   
         if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
@@ -84,8 +89,6 @@ void* handle_connection(void* memory) {
             wait(&status);
 
             /* Read data to buffer */
-            char buf[BUFSIZ];
-            buf[BUFSIZ - 1] = '\0';
             ret = read(ls_pipe[0], buf, MSGSIZE);
             if (ret < 0) {
                 ERROR(errno);
@@ -103,6 +106,11 @@ void* handle_connection(void* memory) {
             D(printf("Cwd: %s\n", dir));
             memcpy((void*) dir, &msg.data, MSGSIZE);
             D(printf("Changing cwd to %s\n", msg.data));
+        } else if (strncmp(msg.cmd, SHELL, SHELL_LEN) == 0) {
+            start_shell(buf);
+            /* Copy data from shell return buf to msg */
+            memcpy(&(msg.data), buf, MSGSIZE);
+            printf("Data ready to be sent to client: %s\n", msg.data);
         }
 
         /* Here we will simply use pipe to transfer data */
