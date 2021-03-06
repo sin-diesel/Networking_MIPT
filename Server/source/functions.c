@@ -143,7 +143,7 @@ void start_shell(char* buf, char* cmd) {
     cmd[cmd_len + 1] = '\0';
     cmd_len = cmd_len + 1;
 
-    printf("Command to be executed:%s", cmd);
+    printf("Command to be executed:%s", cmd);   
     /* Writing command */
     ret = write(fd, cmd, cmd_len);
     if (ret != cmd_len) {
@@ -158,7 +158,14 @@ void start_shell(char* buf, char* cmd) {
     pollfds.events = POLLIN;
     int wait_ms = 1000;
 
+    /* Here is a problem: we always receive command promt at the end of reading
+        therefore, stop at the second output */
+    
+    int cmd_num = 1;
+    char real_output[BUFSIZ];
+
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
+
         if (pollfds.revents == POLLIN) {
             ret = read(fd, buf, BUFSIZ);
             if (ret < 0) {
@@ -174,6 +181,20 @@ void start_shell(char* buf, char* cmd) {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
+
+        if (cmd_num == 2) {
+            memcpy(real_output, buf, BUFSIZ);
+        }
+        ++cmd_num;
+    }
+
+    /* Copy back to main buffer */
+    memcpy(buf, real_output, BUFSIZ);
+    /* Terminate bash */
+    ret = kill(pid, SIGTERM);
+    if (ret < 0) {
+        ERROR(errno);
+        exit(EXIT_FAILURE);
     }
 }   
 
