@@ -1,6 +1,7 @@
 #include "my_server.h"
 
 
+
 /* Print message info */
 void print_info(struct message* msg) {
     printf("ID: %d\n", msg->id);
@@ -196,7 +197,53 @@ void start_shell(char* buf, char* cmd) {
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
-}   
+}
+
+void init_daemon() {
+
+    // process of initialization of daemon
+    LOG("Initilization of daemon with logs at %s\n", log_path);
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+    pid_t sid = setsid();
+
+    if (sid < 0) {
+        LOG("Error setting sid: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    
+    if (chdir("/") < 0) {
+        LOG("Error changing dir: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    pid_t daemon_pid = getpid();
+
+    int fd = open("server.pid", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (fd < 0) {
+        LOG("Error opening pid file dir: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    int n_write = write(fd, &daemon_pid, sizeof(pid_t));
+    assert(n_write == sizeof(pid_t));
+    close(fd);
+
+    LOG("Daemon log initialized at %s\n", log_path);
+
+}
 
 // void enter_command() {
 //     int ret = 0;

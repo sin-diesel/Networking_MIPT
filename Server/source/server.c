@@ -19,6 +19,7 @@ void* handle_connection(void* memory) {
         exit(EXIT_FAILURE);
     }
 
+    LOG("Current thread directory: %s\n", dir);
     printf("Current thread directory:%s\n", dir);
 
     while (1) {
@@ -35,7 +36,8 @@ void* handle_connection(void* memory) {
 
         /* Print info */
         printf("Message received:\n");
-        print_info(&msg);
+        LOG("Message received: %s\n", "");
+        print_info(&msg); // Add printing to log file
 
         char* addr = inet_ntoa(msg.client_data.sin_addr);
         if (addr == NULL) {
@@ -43,7 +45,9 @@ void* handle_connection(void* memory) {
         }
 
         printf("Client address: %s\n", addr);
+        LOG("Client address: %s\n", addr);
         printf("Client port: %d\n", msg.client_data.sin_port);
+        LOG("Client address: %s\n", addr);
 
         /* Handle client's command */   
         if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
@@ -102,7 +106,7 @@ void* handle_connection(void* memory) {
             memcpy(&(msg.data), buf, MSGSIZE);
             close(ls_pipe[0]);
             close(ls_pipe[1]);
-            
+
         } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
 
             D(printf("Cwd: %s\n", dir));
@@ -111,12 +115,13 @@ void* handle_connection(void* memory) {
 
         } else if (strncmp(msg.cmd, SHELL, SHELL_LEN) == 0) {
 
+            LOG("Message data to be executed in shell:%s\n", msg.data);
             printf("Message data to be executed in shell:%s\n", msg.data);
             start_shell(buf, msg.data);
 
             /* Copy data from shell return buf to msg */
             memcpy(&(msg.data), buf, MSGSIZE);
-            printf("Data ready to be sent to client: %s\n", msg.data);
+            LOG("Data ready to be sent to client: %s\n", msg.data);
         }
 
         /* Here we will simply use pipe to transfer data */
@@ -151,6 +156,10 @@ int main() {
     int sk = 0;
     int ret = 0;
 
+    /* Run server as daemon */
+    init_daemon();
+    LOG("Daemon initialized at %s\n", log_path);
+
     #ifdef UDP
     sk = socket(AF_INET, SOCK_DGRAM, 0);
     #endif
@@ -165,7 +174,8 @@ int main() {
 
     if (sk < 0) {
         ERROR(errno);
-        return -1;
+        LOG("Error opening socket: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
 
@@ -216,6 +226,7 @@ int main() {
         ret = pthread_mutex_init(&mutexes[i], NULL);
         if (ret < 0) {
             ERROR(errno);
+            LOG("Error initializing mutex: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
         id_map[i] = 0;
@@ -225,6 +236,7 @@ int main() {
     /* memory for sharing between threads */
     struct message* memory = (struct message*) calloc(MAXCLIENTS, sizeof(struct message));
     if (memory == NULL) {
+        LOG("Error allocating memory for clients: %s\n", strerror(errno));
         printf("Error allocating memory\n");
         exit(EXIT_FAILURE);
     }
@@ -234,6 +246,7 @@ int main() {
     ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
 
     if (ret < 0) {
+        LOG("Error binding: %s\n", strerror(errno));
         ERROR(errno);
         close(sk);
         exit(EXIT_FAILURE);
@@ -269,18 +282,22 @@ int main() {
         ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &client_data, &addrlen);
         if (ret < 0) {
             ERROR(errno);
+            LOG("Error receiving msg: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
         /* Copy client address manually */
         memcpy(&(msg.client_data), &client_data, sizeof(struct sockaddr_in));
 
 
+        LOG("\n\n\nBytes received: %d\n", ret);
+        LOG("Message size expected: %ld\n", sizeof(struct message));
         D(printf("\n\n\nBytes received: %d\n", ret));
         D(printf("Message size expected: %ld\n", sizeof(struct message)));
 
         char* addr = inet_ntoa(client_data.sin_addr);
         if (addr == NULL) {
             fprintf(stderr, "Client address invalid\n");
+            LOG("Client address invalid: %s\n", strerror(errno));
         }
 
         D(printf("Client address: %s\n", addr));

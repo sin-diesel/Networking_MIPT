@@ -127,6 +127,9 @@ int main(int argc, char** argv) {
 
         /* Sending message containing command, client identifier and arguments */
         struct message msg;
+        struct sockaddr_in sender_data;
+        socklen_t addrlen = sizeof(sender_data);
+
         memset(&msg, '\0', sizeof(struct message));
         memcpy(&(msg.cmd), command, cmd_len);
         memcpy(&(msg.id), &pid, sizeof(pid_t));
@@ -136,122 +139,25 @@ int main(int argc, char** argv) {
         print_info(&msg);
 
         D(printf("Sending command\n"));
-        if (which_cmd == EXIT_CMD) {
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
-        } else if (which_cmd == PRINT_CMD) {
 
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            // printf("Sending message\n");
-            // ret = send_message(sk, arg, arg_len, &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
+        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+        printf("Bytes sent: %d\n\n\n", ret);
 
-            struct message msg;
-            struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);
-
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
-
-
-        } else if (which_cmd == LS_CMD) {
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            struct message msg;
-            struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);
-
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
-
-        } else if (which_cmd == CD_CMD) {
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            struct message msg;
-            struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);
-
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
-
-        } else if (which_cmd == BRCAST_CMD) {
-
-            printf("Sending broadcast message\n");
-            ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            /* Receiving broadcast */
-            /* Buffer for data */
-            char buf[BUFSIZ];
-            struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);
-
-            ret = recvfrom(sk, buf, BUFSIZ, 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-
-            printf("Server address received from broadcast: %s\n\n\n", inet_ntoa(sender_data.sin_addr));
-        } else if (which_cmd == SHELL_CMD) {
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            struct message msg;
-            struct sockaddr_in sender_data;
-            socklen_t addrlen = sizeof(sender_data);
-
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
-
-        }
         if (ret < 0) {
             fprintf(stderr, "Error sending message\n");
             close(sk);
             exit(EXIT_FAILURE);
-        } else {
-            printf("Bytes sent: %d\n", ret);
         }
+
+        ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
+        if (ret < 0) {
+            ERROR(errno);
+            return -1;
+        }
+
+        printf("Bytes received: %d\n", ret);
+        printf("Message received:\n");
+        print_info(&msg);
 
         /* Here we manually enter commands */
 

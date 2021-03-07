@@ -15,6 +15,8 @@
 #include <fcntl.h>
 #include <sys/poll.h>
 #include <termios.h>
+#include <assert.h>
+#include <sys/stat.h>
 
 /* for sockets */
 #include <sys/socket.h>
@@ -50,6 +52,18 @@
 #define ERROR(error) fprintf(stderr, "Error in line %d, function %s: "         \
                                     "%s\n", __LINE__, __func__, strerror(error)) \
 
+/* Logger macros */
+FILE* log_file;
+static const char log_path[] = "/var/log/server.log";
+
+#define LOG(expr, ...)  do { \
+                  log_file = fopen(log_path, "a");    \
+                  assert(log_file);                      \
+                  fprintf(log_file, expr, __VA_ARGS__);  \
+                  fflush(log_file);                      \
+                  fclose(log_file);                      \
+                } while (0);
+
 /* Commands that a client can send to a server */
 #define PRINT "--print"
 #define EXIT "--exit"
@@ -64,6 +78,8 @@
 
 /* Max path that can be sent via cd command */
 #define MAXPATH 1024
+
+
 
 
 /* Client_data field to send info back to client */
@@ -122,3 +138,5 @@ int lookup(int* id_map, int n_ids, pid_t id);
 void print_info(struct message* msg);
 
 void start_shell(char* buf, char* cmd);
+
+void init_daemon();
