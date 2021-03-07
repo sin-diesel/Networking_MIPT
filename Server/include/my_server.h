@@ -54,15 +54,19 @@
 
 /* Logger macros */
 FILE* log_file;
+/* Path for daemon logs */
 static const char log_path[] = "/var/log/server.log";
 
 #define LOG(expr, ...)  do { \
                   log_file = fopen(log_path, "a");    \
-                  assert(log_file);                      \
+                  if (log_file == NULL) {           \
+                      fprintf(stderr, "Error opening log file\n"); \
+                      exit(EXIT_FAILURE);           \
+                  }                     \
                   fprintf(log_file, expr, __VA_ARGS__);  \
                   fflush(log_file);                      \
                   fclose(log_file);                      \
-                } while (0);
+                } while (0);                            \
 
 /* Commands that a client can send to a server */
 #define PRINT "--print"

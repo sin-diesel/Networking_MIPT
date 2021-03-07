@@ -1,6 +1,11 @@
 #include "my_server.h"
 
 
+/* TODO
+1) Refactor daemon, upgrade logger macros DONE
+2) Replace printfs with writing to log file DONE
+3) Add client input 
+*/
 
 /* Print message info */
 void print_info(struct message* msg) {
@@ -80,35 +85,39 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 
 
 void start_shell(char* buf, char* cmd) {
-    printf("Starting shell on server\n");
+    LOG("Starting shell on server%s\n", "");
     int ret = 0;
 
     int fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
     if (fd < 0) {
+        LOG("Error opening /dev/ptmx: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
 
     ret = grantpt(fd);
     if (ret < 0) {
+        LOG("Error in grantpr: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
 
     ret = unlockpt(fd);  
     if (ret < 0) {
+        LOG("Error in unlockpt: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     } 
 
     char* path = ptsname(fd);
     if (path == NULL) {
-        printf("Error in path\n");
+        LOG("Error in ptsname: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     int resfd = open(path, O_RDWR);
     if (resfd < 0) {
+        LOG("Error opening path: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
@@ -118,6 +127,7 @@ void start_shell(char* buf, char* cmd) {
 
     ret = tcsetattr(resfd, 0, &term);
     if (ret < 0) {
+        LOG("Error setting attr: %s\n", strerror(errno));
         ERROR(errno)    ;
         exit(EXIT_FAILURE);
     }
@@ -131,10 +141,12 @@ void start_shell(char* buf, char* cmd) {
 
         ret = setsid();
         if (ret < 0) {
+            LOG("Error in setsid: %s\n", strerror(errno));
             ERROR(errno);
         }
 
         execl("/bin/bash", "/bin/bash", NULL);
+        LOG("Error in exec: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -144,11 +156,11 @@ void start_shell(char* buf, char* cmd) {
     cmd[cmd_len + 1] = '\0';
     cmd_len = cmd_len + 1;
 
-    printf("Command to be executed:%s", cmd);   
+    LOG("Command to be executed:%s", cmd);   
     /* Writing command */
     ret = write(fd, cmd, cmd_len);
     if (ret != cmd_len) {
-        printf("Error writing to fd\n");
+        LOG("Error writing to fd: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
@@ -175,9 +187,9 @@ void start_shell(char* buf, char* cmd) {
             }
         }
 
-        printf("Bytes read: %d\n", ret);
+        LOG("Bytes read: %d\n", ret);
         buf[ret] = '\0';
-        printf("Data read: %s\n", buf);
+        LOG("Data read: %s\n", buf);
         if (ret < 0) {
             ERROR(errno);
             exit(EXIT_FAILURE);
@@ -194,6 +206,7 @@ void start_shell(char* buf, char* cmd) {
     /* Terminate bash */
     ret = kill(pid, SIGTERM);
     if (ret < 0) {
+        LOG("Error terminating bash: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
@@ -201,14 +214,17 @@ void start_shell(char* buf, char* cmd) {
 
 void init_daemon() {
 
-    // process of initialization of daemon
+    /* process of initialization of daemon */   
     LOG("Initilization of daemon with logs at %s\n", log_path);
+
+    /* Create a new process */
     pid_t pid = fork();
 
     if (pid < 0) {
         ERROR(errno);
         exit(EXIT_FAILURE);
     } else if (pid > 0) {
+        /* Exit in parent */
         exit(EXIT_SUCCESS);
     }
 
@@ -220,17 +236,20 @@ void init_daemon() {
         exit(EXIT_FAILURE);
     }
     
+    /* Change directory */
     if (chdir("/") < 0) {
         LOG("Error changing dir: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
     
+    /* Close all file descriptors */
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
     pid_t daemon_pid = getpid();
 
+    /* Write pid to pid file */
     int fd = open("server.pid", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         LOG("Error opening pid file dir: %s\n", strerror(errno));
@@ -241,6 +260,7 @@ void init_daemon() {
     assert(n_write == sizeof(pid_t));
     close(fd);
 
+    /* Print success message */
     LOG("Daemon log initialized at %s\n", log_path);
 
 }
