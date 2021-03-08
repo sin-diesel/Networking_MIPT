@@ -231,6 +231,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     
     int cmd_num = 1;
     char real_output[BUFSIZ];
+    int offset = 0;
 
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
 
@@ -249,15 +250,17 @@ void start_shell(char* buf, char* input, char* cwd) {
             ERROR(errno);
             exit(EXIT_FAILURE);
         }
-
-        if (cmd_num == 2) {
-            memcpy(real_output, buf, BUFSIZ);
-        }
-        ++cmd_num;
+        
+        memcpy(real_output + offset, buf, ret);
+        offset += ret;
     }
 
     /* Copy back to main buffer */
     memcpy(buf, real_output, BUFSIZ);
+    /* Null terminate */
+    buf[offset] = '\0';
+    LOG("Full output: %s\n", buf);
+    
     /* Terminate bash */
     ret = kill(pid, SIGTERM);
     if (ret < 0) {

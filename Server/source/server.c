@@ -120,6 +120,7 @@ void* handle_connection(void* memory) {
 
             LOG("Message data to be executed in shell:%s\n", msg.data);
             /* Send cwd so shell knows where to execute command */
+            //memcpy(buf, 0, BUFSIZ);
             start_shell(buf, msg.data, dir);
 
             /* Copy data from shell return buf to msg */
