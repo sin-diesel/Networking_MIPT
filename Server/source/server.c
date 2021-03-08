@@ -331,8 +331,10 @@ int main() {
                 exit(EXIT_SUCCESS);
         } else if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
             LOG("Broadcasting server IP%s\n", "");
-            char message[] = "Reply to client";
-            ret = sendto(sk, &message, sizeof(message), 0,
+            char reply[] = "Reply to client";
+            memcpy(msg.data, reply, sizeof(reply));
+
+            ret = sendto(sk, reply, sizeof(reply), 0,           \
                              (struct sockaddr*) &client_data, sizeof(client_data));
             if (ret < 0) {
                 LOG("Error sending message to client: %s\n", strerror(errno));
@@ -342,7 +344,6 @@ int main() {
 
         }
         
-        LOG("Command sent, no action required: %s\n", msg.cmd);
 
         thread_memory = &memory[msg.id];
         memcpy(thread_memory, &msg, sizeof(struct message));

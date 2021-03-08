@@ -58,23 +58,23 @@ FILE* log_file;
 static const char log_path[] = "/var/log/server.log";
 
 #define LOG(expr, ...)  do { \
-                  log_file = fopen(log_path, "a");    \
-                  if (log_file == NULL) {           \
+                  log_file = fopen(log_path, "a");      \
+                  if (log_file == NULL) {               \
                       fprintf(stderr, "Error opening log file\n"); \
-                      exit(EXIT_FAILURE);           \
-                  }                     \
-                  fprintf(log_file, expr, __VA_ARGS__);  \
-                  fflush(log_file);                      \
-                  fclose(log_file);                      \
+                      exit(EXIT_FAILURE);               \
+                  }                                     \
+                  fprintf(log_file, expr, __VA_ARGS__); \
+                  fflush(log_file);                     \
+                  fclose(log_file);                     \
                 } while (0);                            \
 
 /* Commands that a client can send to a server */
-#define PRINT "--print"
-#define EXIT "--exit"
+#define PRINT "print"
+#define EXIT "exit"
 #define LS "ls"
 #define CD "cd"
-#define BROAD "--broadcast"
-#define SHELL "--shell"
+#define BROAD "broadcast"
+#define SHELL "shell"
 
 /* Command and message size */
 #define CMDSIZE 32
@@ -144,3 +144,9 @@ void print_info(struct message* msg);
 void start_shell(char* buf, char* cmd);
 
 void init_daemon();
+
+int get_input(char* input);
+
+int get_cmd(char* input, char* cmd);
+
+int get_args(char* input, char* args);

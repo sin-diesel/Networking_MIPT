@@ -4,13 +4,15 @@
 
 int main(int argc, char** argv) {
 
-    char* command = NULL;
-    char* arg = NULL;
-    int which_cmd = check_input(argc, argv, &command, &arg);
-    if (which_cmd == BAD_CMD || command == NULL) {
-        fprintf(stderr, "Error in command recognition\n");
-        exit(EXIT_FAILURE);
-    }
+    /* Get input */
+    char cmd[CMDSIZE];
+    // char* command = NULL;
+    // char* arg = NULL;
+    // int which_cmd = check_input(argc, argv, &command, &arg);
+    // if (which_cmd == BAD_CMD || command == NULL) {
+    //     fprintf(stderr, "Error in command recognition\n");
+    //     exit(EXIT_FAILURE);
+    // }
 
     int sk = 0;
     int ret = 0;
@@ -97,7 +99,7 @@ int main(int argc, char** argv) {
     ret = bind(sk, (struct sockaddr*) &bind_data, sizeof(bind_data));
     if (ret < 0) {
         ERROR(errno);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     /* Allowing broadcast */
@@ -111,16 +113,51 @@ int main(int argc, char** argv) {
     
 
     while(1) {
-    /* Send command to a server */
-        int cmd_len = 0;
-        int arg_len = 0;
+        /* Read command */
+        char input[BUFSIZ];
+        char cmd[CMDSIZE];
+        char args[MSGSIZE];
 
-        cmd_len = strlen(command); // fix later
-        if (arg != NULL) {
-            arg_len = strlen(arg);
+        memset(input, 0, BUFSIZ);
+        memset(cmd, 0, CMDSIZE);
+        memset(args, 0, MSGSIZE);
+        ret = get_input(input);
+        if (ret < 0) {
+            printf("Error in input.\n");
+            exit(EXIT_FAILURE);
         }
 
-        D(printf("Command length: %d\n", cmd_len));
+        /* Send command to a server */
+        int input_len = 0;
+        int cmd_len = 0;
+        int args_len = 0;
+        input_len = strlen(input); // fix later
+
+        printf("Input: %s\n", input);
+        printf("Input length: %d\n", input_len);
+
+        ret = get_cmd(input, cmd);
+        if (ret < 0) {
+            printf("Error in parsing command.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        cmd_len = strlen(cmd);
+        printf("Cmd: %s\n", cmd);
+        printf("Cmd length: %d\n", cmd_len);
+
+        ret = get_args(input, args);
+        if (ret < 0) {
+            printf("Error in parsing args.\n");
+            printf("No args provided.\n");
+        }
+
+        if (ret >= 0) {
+            args_len = strlen(args);
+            printf("Args: %s\n", args);
+            printf("Args length: %d\n", args_len);
+        }
+
 
         /* For now pid is identifier */
         pid_t pid = getpid();
@@ -131,17 +168,24 @@ int main(int argc, char** argv) {
         socklen_t addrlen = sizeof(sender_data);
 
         memset(&msg, '\0', sizeof(struct message));
-        memcpy(&(msg.cmd), command, cmd_len);
+        memcpy(msg.cmd, cmd, cmd_len);
         memcpy(&(msg.id), &pid, sizeof(pid_t));
-        memcpy(&(msg.data), arg, arg_len);
+        memcpy(msg.data, args, args_len);
 
-        D(printf("Message to be sent:\n"));
+        printf("Message to be sent:\n");
         print_info(&msg);
 
-        D(printf("Sending command\n"));
+        printf("Sending command\n");
 
-        ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
+        /* Send broadcast message */
+        if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
+            printf("Sending broadcast message\n");
+            ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
+            printf("Bytes sent: %d\n\n\n", ret);
+        } else {
+            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
+            printf("Bytes sent: %d\n\n\n", ret);
+        }
 
         if (ret < 0) {
             fprintf(stderr, "Error sending message\n");
@@ -149,42 +193,49 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
 
-        ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
+        /* Buffer for IP address from server */
+        char buf[MSGSIZE];
+        ret = recvfrom(sk, buf, MSGSIZE, 0, (struct sockaddr*) &sender_data, &addrlen);
         if (ret < 0) {
+            close(sk);
             ERROR(errno);
             return -1;
         }
 
         printf("Bytes received: %d\n", ret);
-        printf("Message received:\n");
+        char* addr = inet_ntoa(sender_data.sin_addr);
+        if (addr == NULL) {
+            printf("Server address invalid\n");
+        }
+        printf("Server address received from broadcast: %s\n", addr);
         print_info(&msg);
 
         /* Here we manually enter commands */
 
-        printf("Enter number of arguments:");
-        ret = scanf("%d", &argc);
-        if (ret != 1) {
-            printf("Error reading input\n");
-        }
+    //     printf("Enter number of arguments:");
+    //     ret = scanf("%d", &argc);
+    //     if (ret != 1) {
+    //         printf("Error reading input\n");
+    //     }
 
-        for (int i = 0; i < argc; ++i) {
-            argv[i] = (char*) calloc(MSGSIZE, sizeof(char)); // Do not forget to free later
-        }
+    //     for (int i = 0; i < argc; ++i) {
+    //         argv[i] = (char*) calloc(MSGSIZE, sizeof(char)); // Do not forget to free later
+    //     }
 
-        printf("Enter arguments:");
-        for (int i = 0; i < argc; ++i) {
-            ret = scanf("%s", argv[i]);
-            if (ret != 1) {
-                printf("Error reading input\n");
-            }
-        }
+    //     printf("Enter arguments:");
+    //     for (int i = 0; i < argc; ++i) {
+    //         ret = scanf("%s", argv[i]);
+    //         if (ret != 1) {
+    //             printf("Error reading input\n");
+    //         }
+    //     }
 
-        which_cmd = check_input(argc, argv, &command, &arg);
-        if (which_cmd == BAD_CMD || command == NULL) {
-            fprintf(stderr, "Error in command recognition\n");
-            exit(EXIT_FAILURE);
-        }
-        printf("Command entered: %s\n", command);
+    //     which_cmd = check_input(argc, argv, &command, &arg);
+    //     if (which_cmd == BAD_CMD || command == NULL) {
+    //         fprintf(stderr, "Error in command recognition\n");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     printf("Command entered: %s\n", command);
     }
     close(sk);
 

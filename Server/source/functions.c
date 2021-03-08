@@ -265,13 +265,62 @@ void init_daemon() {
 
 }
 
-// void enter_command() {
-//     int ret = 0;
+int get_input(char* input) {
+    printf("Enter command:\n");
 
-//     printf("Enter command:\n");
+    char* inp = NULL;
 
-//     char cmd[CMDSIZE];
+    inp = fgets(input, BUFSIZ, stdin);
+    if (inp == NULL) {
+        return -1;
+    }
 
-//     fgets
-// }
+    return 0;
+}
+
+int get_cmd(char* input, char* cmd) {
+    int cmd_len = 0;
+    char buf[BUFSIZ];
+    memcpy(buf, input, BUFSIZ);
+    
+    char* sp = strchr(buf, ' ');
+    if (sp == NULL) {
+        cmd_len = strlen(buf);
+        memcpy(cmd, buf, cmd_len);
+        return cmd_len;
+    } else {
+        *sp = '\0';
+        cmd_len = strlen(buf);
+        /* Copy null character as well */
+        memcpy(cmd, buf, cmd_len + 1);
+        return cmd_len;
+    }
+
+    return 0;
+}
+
+/* Args buffer is expected to be at least MSGSIZE */
+int get_args(char* input, char* args) {
+    int cmd_len = 0;
+    char buf[BUFSIZ];
+    memcpy(buf, input, BUFSIZ);
+
+    char* sp = strchr(buf, ' ');
+    if (sp == NULL) {
+        return -1;
+    }
+
+    char* end = NULL;
+    end = strchr(sp + 1, '\0');
+    if (end == NULL) {
+        return -1;
+    }
+
+    cmd_len = strlen(sp + 1);
+    /* Include null terminating character as well */
+    /* May need to remove \n at the end */
+    memcpy(args, sp + 1, cmd_len + 1);
+
+    return cmd_len;
+}
 
