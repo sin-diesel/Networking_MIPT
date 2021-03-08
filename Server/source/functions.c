@@ -6,7 +6,10 @@
 2) Replace printfs with writing to log file DONE
 3) Add client input  DONE
 4) Add broadcast DONE
-5) Add exit in server and client
+5) Add exit in server and client DONE
+6) Add shell command to change cwd in corresponding thread 
+7) Fix no job control when first starting bash
+8) add cd arguments to bash
 */
 
 /* Print message info */
@@ -86,9 +89,13 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 }
 
 
-void start_shell(char* buf, char* cmd) {
+void start_shell(char* buf, char* input, char* cwd) {
     LOG("Starting shell on server%s\n", "");
     int ret = 0;
+
+    char input_copy[BUFSIZ];
+    /* Copying buffer */
+    strcpy(input_copy, input);
 
     int fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
     if (fd < 0) {
@@ -153,14 +160,56 @@ void start_shell(char* buf, char* cmd) {
     }
 
     /* Add \n to the end of command assuming we have enough space */
-    int cmd_len = strlen(cmd);
-    cmd[cmd_len] = '\n';
-    cmd[cmd_len + 1] = '\0';
-    cmd_len = cmd_len + 1;
+    int cmd_len = strlen(input);
 
-    LOG("Command to be executed:%s", cmd);   
+    /* Get cmd and args */
+    char cmd[CMDSIZE];
+    char args[MSGSIZE];
+
+    ret = get_cmd(input, cmd);
+    if (ret < 0) {
+        LOG("Error parsing command.%s\n", "");
+    }
+
+    ret = get_args(input, args);
+    if (ret < 0) {
+        LOG("Error parsing args.%s\n", "");
+    }
+
+    LOG("Cmd: %s\n", cmd);
+
+    // LOG("Command to be executed:%s", cmd);
+    LOG("Args: %s\n", args);
+    /* Change directory if cd */
+    if (strncmp(cmd, CD, CD_LEN) == 0) {
+        LOG("Cwd:%s\n", cwd);
+        /* Copy to cwd new directory */
+        memcpy((void*) cwd, args, MSGSIZE);
+        LOG("Changed to: %s\n", cwd);
+    }  
+
+
     /* Writing command */
-    ret = write(fd, cmd, cmd_len);
+    /* Manually construct ls command with cwd */
+    char new_input[BUFSIZ];
+    memset(new_input, 0, BUFSIZ);
+
+    if (strncmp(cmd, LS, LS_LEN) == 0) {
+        LOG("LS in cwd:%s\n", cwd);
+        memcpy(new_input, cmd, LS_LEN);
+        int cwd_len = strlen(cwd);
+        LOG("CWD len: %d\n", cwd_len);
+        new_input[LS_LEN] = ' ';
+        memcpy(new_input + LS_LEN + 1 , cwd, cwd_len);
+        /* Add newline at the end */
+        new_input[LS_LEN + 1 + cwd_len] = '\n';
+        new_input[LS_LEN + 3 + cwd_len] = '\0';
+        LOG("Command constructed: %s", new_input);
+    }
+
+    cmd_len = strlen(new_input);                                
+
+    ret = write(fd, new_input, cmd_len);
     if (ret != cmd_len) {
         LOG("Error writing to fd: %s\n", strerror(errno));
         ERROR(errno);

@@ -119,7 +119,8 @@ void* handle_connection(void* memory) {
         } else if (strncmp(msg.cmd, SHELL, SHELL_LEN) == 0) {
 
             LOG("Message data to be executed in shell:%s\n", msg.data);
-            start_shell(buf, msg.data);
+            /* Send cwd so shell knows where to execute command */
+            start_shell(buf, msg.data, dir);
 
             /* Copy data from shell return buf to msg */
             memcpy(msg.data, buf, MSGSIZE);
