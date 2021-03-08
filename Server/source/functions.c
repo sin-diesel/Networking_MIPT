@@ -4,7 +4,9 @@
 /* TODO
 1) Refactor daemon, upgrade logger macros DONE
 2) Replace printfs with writing to log file DONE
-3) Add client input 
+3) Add client input  DONE
+4) Add broadcast DONE
+5) Add exit in server and client
 */
 
 /* Print message info */

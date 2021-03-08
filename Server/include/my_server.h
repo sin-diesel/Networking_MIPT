@@ -75,6 +75,7 @@ static const char log_path[] = "/var/log/server.log";
 #define CD "cd"
 #define BROAD "broadcast"
 #define SHELL "shell"
+#define QUIT "quit"
 
 /* Command and message size */
 #define CMDSIZE 32
@@ -102,6 +103,7 @@ enum cmds {
     CD_CMD,
     BRCAST_CMD,
     SHELL_CMD,
+    QUIT_CMD,
     BAD_CMD
 };
 
@@ -113,6 +115,7 @@ enum cmd_len {
     CD_LEN = sizeof(CD) - 1 ,
     BROAD_LEN = sizeof(BROAD) - 1,
     SHELL_LEN = sizeof(SHELL) - 1,
+    QUIT_LEN = sizeof(QUIT) - 1
 };
 
 

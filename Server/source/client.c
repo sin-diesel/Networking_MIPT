@@ -158,6 +158,12 @@ int main(int argc, char** argv) {
             printf("Args length: %d\n", args_len);
         }
 
+        /* Exit client if command quit was specified */
+        if (strncmp(cmd, QUIT, QUIT_LEN) == 0) {
+            printf("Exiting client.\n");
+            return 0;
+        };
+
 
         /* For now pid is identifier */
         pid_t pid = getpid();
@@ -179,36 +185,48 @@ int main(int argc, char** argv) {
 
         /* Send broadcast message */
         if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
+            /* Buffer for IP address from server */
+            char buf[MSGSIZE];
+
             printf("Sending broadcast message\n");
             ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
             printf("Bytes sent: %d\n\n\n", ret);
+
+            if (ret < 0) {
+                fprintf(stderr, "Error sending message\n");
+                close(sk);
+                exit(EXIT_FAILURE);
+            }
+
+            ret = recvfrom(sk, buf, MSGSIZE, 0, (struct sockaddr*) &sender_data, &addrlen);
+            if (ret < 0) {
+                close(sk);
+                ERROR(errno);
+                return -1;
+            }
+
+            printf("Bytes received: %d\n", ret);
+            char* addr = inet_ntoa(sender_data.sin_addr);
+            if (addr == NULL) {
+                printf("Server address invalid\n");
+            }
+            printf("Server address received from broadcast: %s\n", addr);
+            print_info(&msg);
+
         } else {
             ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
             printf("Bytes sent: %d\n\n\n", ret);
-        }
 
-        if (ret < 0) {
-            fprintf(stderr, "Error sending message\n");
-            close(sk);
-            exit(EXIT_FAILURE);
-        }
+            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
 
-        /* Buffer for IP address from server */
-        char buf[MSGSIZE];
-        ret = recvfrom(sk, buf, MSGSIZE, 0, (struct sockaddr*) &sender_data, &addrlen);
-        if (ret < 0) {
-            close(sk);
-            ERROR(errno);
-            return -1;
+            printf("Bytes received: %d\n", ret);
+            printf("Message received:\n");
+            print_info(&msg);
         }
-
-        printf("Bytes received: %d\n", ret);
-        char* addr = inet_ntoa(sender_data.sin_addr);
-        if (addr == NULL) {
-            printf("Server address invalid\n");
-        }
-        printf("Server address received from broadcast: %s\n", addr);
-        print_info(&msg);
 
         /* Here we manually enter commands */
 

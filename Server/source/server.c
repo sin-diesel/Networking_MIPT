@@ -326,6 +326,7 @@ int main() {
         /* Decide which message was sent, handle exit and broadcast */
         if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
             /* Closing server */
+                LOG("Closing server%s", "");
                 close(sk);
                 unlink(PATH);
                 exit(EXIT_SUCCESS);
