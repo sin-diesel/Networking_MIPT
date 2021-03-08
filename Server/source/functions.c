@@ -190,9 +190,10 @@ void start_shell(char* buf, char* input, char* cwd) {
 
 
     /* Writing command */
-    /* Manually construct ls command with cwd */
+    /* Manually construct ls command with cwd,
+        if we do not need to construct manually, simply copy old input to new input */
     char new_input[BUFSIZ];
-    memset(new_input, 0, BUFSIZ);
+    strncpy(new_input, input, BUFSIZ);
 
     if (strncmp(cmd, LS, LS_LEN) == 0) {
         LOG("LS in cwd:%s\n", cwd);
@@ -206,6 +207,9 @@ void start_shell(char* buf, char* input, char* cwd) {
         new_input[LS_LEN + 3 + cwd_len] = '\0';
         LOG("Command constructed: %s", new_input);
     }
+
+    /* Copy back to main buffer. If input has not been changed, than everything
+        is ok */
 
     cmd_len = strlen(new_input);                                
 
