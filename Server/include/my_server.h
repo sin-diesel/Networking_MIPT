@@ -82,6 +82,11 @@ struct message {
     struct sockaddr_in client_data;
 };
 
+enum connection_type {
+    UDP_CON = 0,
+    TCP_CON,
+};
+
 /* Types of commands that can be sent to our server */
 enum cmds {
     PRINT_CMD = 0,
@@ -116,7 +121,7 @@ enum cmd_len {
 #define MAXCLIENTS 100000
 
 /* Maximum amount of pending requests */
-#define MAX_QUEUE 20
+#define BACKLOG 20
 
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
@@ -164,3 +169,7 @@ int get_args(char* input, char* args);
 void addr_init(struct sockaddr_in* sk_addr, in_addr_t addr);
 
 void udp_work();
+
+void tcp_work();
+
+void construct_input(char* cmd, char* new_input, char* cwd);

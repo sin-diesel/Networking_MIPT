@@ -14,7 +14,7 @@
 10) split big output from bash into packages DONE
 11) Fix bash settings, add continous bash operation
 12) Fix mutexes locking/unlocking DONE
-13) fix buffers
+13) fix buffers DONE
 */
 
 /* Print message info */
@@ -203,6 +203,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     LOG("Cmd: %s\n", cmd);
 
     LOG("Args: %s\n", args);
+
     /* Change directory if cd */
     if (strncmp(cmd, CD, CD_LEN) == 0) {
         LOG("Cwd:%s\n", cwd);
@@ -216,23 +217,13 @@ void start_shell(char* buf, char* input, char* cwd) {
     /* Manually construct ls command with cwd,
         if we do not need to construct manually, simply copy old input to new input */
     char new_input[BUFSIZ];
+    /* Copy back to main buffer. If input has not been changed, than everything
+        is ok */
     strncpy(new_input, input, BUFSIZ);
 
     if (strncmp(cmd, LS, LS_LEN) == 0) {
-        LOG("LS in cwd:%s\n", cwd);
-        memcpy(new_input, cmd, LS_LEN);
-        int cwd_len = strlen(cwd);
-        LOG("CWD len: %d\n", cwd_len);
-        new_input[LS_LEN] = ' ';
-        memcpy(new_input + LS_LEN + 1 , cwd, cwd_len);
-        /* Add newline at the end */
-        new_input[LS_LEN + 1 + cwd_len] = '\n';
-        new_input[LS_LEN + 3 + cwd_len] = '\0';
-        LOG("Command constructed: %s", new_input);
+        construct_input(cmd, new_input, cwd);
     }
-
-    /* Copy back to main buffer. If input has not been changed, than everything
-        is ok */
 
     cmd_len = strlen(new_input);   
     LOG("Input to shell len: %d\n", cmd_len);
@@ -252,7 +243,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     int wait_ms = 1000;
 
     
-    char real_output[BUFSIZ];
+    char output[BUFSIZ];
     int offset = 0;
 
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
@@ -273,13 +264,19 @@ void start_shell(char* buf, char* input, char* cwd) {
             exit(EXIT_FAILURE);
         }
         
-        memcpy(real_output + offset, buf, ret);
-        offset += ret;
+        if (offset + ret  < BUFSIZ) {
+            memcpy(output + offset, buf, ret);
+            offset += ret;
+        } else {
+            /* If buffer is not large enough */
+            break;
+        }
     }
 
     /* Copy back to main buffer */
-    memcpy(buf, real_output, BUFSIZ);
+    memcpy(buf, output, BUFSIZ);
     /* Null terminate */
+    LOG("Output total size: %d\n", offset);
     buf[offset] = '\0';
     LOG("Full output: %s\n", buf);
     
@@ -532,7 +529,7 @@ void reply_to_client(struct message* msg) {
     LOG("Command: %s\n", msg->cmd);
     LOG("Data: %s\n", msg->data);
 
-    ret = send_message(sk, msg, sizeof(struct message), &msg->client_data);
+    ret = send_message(sk, msg, sizeof(struct message), &(msg->client_data));
     if (ret < 0) {
         LOG("Error sending message: %s\n", strerror(errno));
         ERROR(errno);
@@ -595,4 +592,23 @@ void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, st
     printf("ID: %d\n", msg->id);
     printf("Command: %s\n", msg->cmd);
     printf("Data: %s\n", msg->data);
+}
+
+void construct_input(char* cmd, char* new_input, char* cwd) {
+    if (strncmp(cmd, LS, LS_LEN) == 0) {
+        LOG("LS in cwd:%s\n", cwd);
+        memcpy(new_input, cmd, LS_LEN);
+        int cwd_len = strlen(cwd);
+        LOG("CWD len: %d\n", cwd_len);
+        new_input[LS_LEN] = ' ';
+        memcpy(new_input + LS_LEN + 1 , cwd, cwd_len);
+        /* Add newline at the end */
+        new_input[LS_LEN + 1 + cwd_len] = '\n';
+        new_input[LS_LEN + 3 + cwd_len] = '\0';
+        LOG("Command constructed: %s", new_input);
+    }
+}
+
+void tcp_get_msg(int client_sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data) {
+
 }

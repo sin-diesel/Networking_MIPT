@@ -4,6 +4,16 @@
 
 int main(int argc, char** argv) {
 
+    int connection_type = UDP_CON;
+
+    if (argc == 2) {
+        if (strcmp(argv[1], "--udp")) {
+            connection_type = UDP_CON;
+        } else if (strcmp(argv[1], "--tcp")) {
+            connection_type = TCP_CON;
+        }
+    }
+
     int sk = 0;
     struct sockaddr_in sk_addr;
     struct sockaddr_in sk_bind;
@@ -107,7 +117,16 @@ int main(int argc, char** argv) {
             ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
         } else {
             /* Send other message */
-            send_to_server(sk, &msg, &sk_broad, &server_data, &addrlen);
+            if (connection_type == UDP_CON) {
+                send_to_server(sk, &msg, &sk_addr, &server_data, &addrlen);
+            } else {
+                ret = connect(sk, &sk_addr, addrlen);
+                if (ret < 0) {
+                    ERROR(errno);
+                    exit(EXIT_FAILURE);
+                }
+                send_to_server(sk, &msg, &sk_addr, &server_data, &addrlen);
+            }
         }
     }
     close(sk);

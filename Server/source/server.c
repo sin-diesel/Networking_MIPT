@@ -141,6 +141,18 @@ void* handle_connection(void* memory) {
 //---------------------------------------------------
 int main(int argc, char** argv) {
 
+    /* Choose connection type */
+
+    int connection_type = UDP_CON;
+
+    if (argc == 2) {
+        if (strcmp(argv[1], "--udp")) {
+            connection_type = UDP_CON;
+        } else if (strcmp(argv[1], "--tcp")) {
+            connection_type = TCP_CON;
+        }
+    }
+
     /* Creating and initializing socket */
     int sk = 0;
     int ret = 0;
@@ -149,7 +161,11 @@ int main(int argc, char** argv) {
     /* Run server as daemon */
     init_daemon();
 
-    sk = socket(AF_INET, SOCK_DGRAM, 0);
+    if (connection_type == UDP_CON) {
+        sk = socket(AF_INET, SOCK_DGRAM, 0);
+    } else {
+        sk = socket(AF_INET, SOCK_STREAM, 0);
+    }
 
     if (sk < 0) {
         ERROR(errno);
@@ -193,7 +209,29 @@ int main(int argc, char** argv) {
         struct message* thread_memory = NULL;
 
         /* Get message from client */
-        udp_get_msg(sk, &sk_addr, &msg, &client_data);
+        if (connection_type == UDP_CON) {
+            udp_get_msg(sk, &sk_addr, &msg, &client_data);
+        } else {
+            /* First get ready for listening */
+            ret = listen(sk, BACKLOG);
+            if (ret < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+            
+            /* Accept client connections */
+            int client_sk = 0;
+            client_sk = accept(sk, NULL, NULL);
+            if (client_sk < 0) {
+                ERROR(errno);
+                exit(EXIT_FAILURE);
+            }
+
+            udp_get_msg(client_sk, &sk_addr, &msg, &client_data);
+
+            //tcp_get_msg(client_sk, &sk_addr, &msg, &client_data);
+
+        }
 
         /* Decide which message was sent, handle exit and broadcast */
         if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
