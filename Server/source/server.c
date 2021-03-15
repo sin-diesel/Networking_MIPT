@@ -10,9 +10,18 @@ pthread_mutex_t mutexes[MAXCLIENTS];
 void* handle_connection(void* memory) {
 
     struct message msg;
+    memset(&msg, 0, sizeof(struct message));
+
     /* Buffer for maintaining data */
     char buf[BUFSIZ];
     buf[BUFSIZ - 1] = '\0';
+    memset(buf, 0, BUFSIZ);
+    char ack[] = "Message received";
+    char none[] = "None";
+
+    /* Construct default ack message to client */
+    memcpy(msg.cmd, none, sizeof(none));
+    memcpy(msg.data, ack, sizeof(ack));
 
     LOG("Entered new thread %s\n", "");
 
@@ -121,7 +130,6 @@ void* handle_connection(void* memory) {
             memcpy(msg.data, buf, MSGSIZE);
             LOG("Data ready to be sent to client: %s\n", msg.data);
         }
-
         reply_to_client(&msg);
     }
 
@@ -182,28 +190,29 @@ int main(int argc, char** argv) {
         struct message msg;
         memset(&msg, '\0', sizeof(struct message));
         struct sockaddr_in client_data;
+        struct message* thread_memory = NULL;
 
         /* Get message from client */
         udp_get_msg(sk, &sk_addr, &msg, &client_data);
-
-        /* Copy msg to corresponding client */
-        struct message* thread_memory = &memory[msg.id];
-        memcpy(thread_memory, &msg, sizeof(struct message));
-
-        /* Check whether we need a new thread. Create one if needed */
-        check_thread(thread_ids, thread_memory, id_map, &msg, handle_connection);
 
         /* Decide which message was sent, handle exit and broadcast */
         if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
             /* Closing server */
             terminate_server(sk);
-        } else if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
-            send_broadcast(sk, &msg, &client_data);
         }
+
+        /* Access the corresponding location in memory */
+        thread_memory = &memory[msg.id];
+        memcpy(thread_memory, &msg, sizeof(struct message));
+
+        /* Check whether we need a new thread. Create one if needed */
+        check_thread(thread_ids, thread_memory, id_map, &msg, handle_connection);
         
         /* Transfer data to corresponding client's memory cell */
         thread_memory = &memory[msg.id];
         memcpy(thread_memory, &msg, sizeof(struct message));
+
+        /* Unlock mutex so client thread could access the memory */
         pthread_mutex_unlock(&mutexes[msg.id]);
         printf("\n\n\n");
 

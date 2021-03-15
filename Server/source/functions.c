@@ -13,7 +13,8 @@
 9) add tcp_init and udp_init functions DONE
 10) split big output from bash into packages DONE
 11) Fix bash settings, add continous bash operation
-12) Fix mutexes locking/unlocking
+12) Fix mutexes locking/unlocking DONE
+13) fix buffers
 */
 
 /* Print message info */
@@ -131,6 +132,10 @@ int init_shell(int* pid) {
 
     struct termios term;
     term.c_lflag = 0;
+    term.c_cflag = 191;
+    term.c_oflag = 5;
+    term.c_iflag = 17664;
+    term.c_lflag = 35387;
 
     ret = tcsetattr(resfd, 0, &term);
     if (ret < 0) {
@@ -241,8 +246,6 @@ void start_shell(char* buf, char* input, char* cwd) {
     pollfds.events = POLLIN;
     int wait_ms = 1000;
 
-    /* Here is a problem: we always receive command promt at the end of reading
-        therefore, stop at the second output */
     
     char real_output[BUFSIZ];
     int offset = 0;
@@ -500,7 +503,7 @@ void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data
     char reply[] = "Reply to client";
     memcpy(msg->data, reply, sizeof(reply));
 
-    ret = sendto(sk, reply, sizeof(reply), 0,           \
+    ret = sendto(sk, msg, sizeof(struct message), 0,           \
                 (struct sockaddr*) client_data, sizeof(struct sockaddr_in));
     if (ret < 0) {
         LOG("Error sending message to client: %s\n", strerror(errno));
@@ -520,7 +523,6 @@ void reply_to_client(struct message* msg) {
 
     LOG("SENDING MESSAGE BACK TO CLIENT%s\n", "");
     /* Print info */
-    LOG("Message received: %s\n", "");
     LOG("ID: %d\n", msg->id);
     LOG("Command: %s\n", msg->cmd);
     LOG("Data: %s\n", msg->data);
@@ -566,10 +568,10 @@ void ask_broadcast(int sk, struct message* msg, struct sockaddr_in* sk_broad, st
     }
     printf("Server address received from broadcast: %s\n", addr);
     printf("Bytes received: %d\n", ret);
-    printf("Message received:\n");
-    printf("ID: %d\n", msg->id);
-    printf("Command: %s\n", msg->cmd);
-    printf("Data: %s\n", msg->data);
+//     printf("Message received:\n");
+//     printf("ID: %d\n", msg->id);
+//     printf("Command: %s\n", msg->cmd);
+//     printf("Data: %s\n", msg->data);
 }
 
 void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, struct sockaddr_in* server_data, socklen_t* addrlen) {
