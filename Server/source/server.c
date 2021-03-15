@@ -129,7 +129,7 @@ void* handle_connection(void* memory) {
             /* Copy data from shell return buf to msg */
             memcpy(msg.data, buf, MSGSIZE);
             LOG("Data ready to be sent to client: %s\n", msg.data);
-        }
+        }   
         reply_to_client(&msg);
     }
 

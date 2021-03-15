@@ -131,11 +131,16 @@ int init_shell(int* pid) {
     }
 
     struct termios term;
-    term.c_lflag = 0;
+    /* Default terminal settings */
     term.c_cflag = 191;
     term.c_oflag = 5;
     term.c_iflag = 17664;
     term.c_lflag = 35387;
+    /* Remove echo flag */
+    tcflag_t mask = ~(1 << sizeof(tcflag_t));
+    LOG("C_lflag before removing ECHO: %d\n", term.c_lflag);
+    term.c_lflag = term.c_lflag & (~ECHO);   
+    LOG("C_lflag after removing ECHO: %d\n", term.c_lflag);
 
     ret = tcsetattr(resfd, 0, &term);
     if (ret < 0) {
