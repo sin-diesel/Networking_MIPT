@@ -4,112 +4,34 @@
 
 int main(int argc, char** argv) {
 
-    /* Get input */
-    char cmd[CMDSIZE];
-    // char* command = NULL;
-    // char* arg = NULL;
-    // int which_cmd = check_input(argc, argv, &command, &arg);
-    // if (which_cmd == BAD_CMD || command == NULL) {
-    //     fprintf(stderr, "Error in command recognition\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
     int sk = 0;
+    struct sockaddr_in sk_addr;
+    struct sockaddr_in sk_bind;
+    struct sockaddr_in sk_broad;
+    struct message msg;
+    struct sockaddr_in server_data;
+    socklen_t addrlen = sizeof(server_data);
+
     int ret = 0;
 
-    #ifdef UDP
+    /* Init socket address and family */
     sk = socket(AF_INET, SOCK_DGRAM, 0);
-    #endif
-
-    #ifdef INET
-    sk = socket(AF_INET, SOCK_STREAM, 0);
-    #endif
-
-    #ifdef LOCAL
-    sk = socket(AF_UNIX, SOCK_STREAM, 0);
-    #endif
+    addr_init(&sk_addr, INADDR_LOOPBACK);
 
     if (sk < 0) {
         ERROR(errno);
-        return -1;
-    }
-
-    /* init socket address and family */
-    #ifdef TCP
-
-    #ifdef INET
-
-    struct sockaddr_in sk_addr = {0};
-    sk_addr.sin_family = AF_INET;
-    sk_addr.sin_port = htons(23456); /* using here htons for network byte order conversion */
-    sk_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* same goes for ip */
-
-    #endif
-
-    #ifdef COMM
-
-    struct in_addr addr;
-    res = inet_pton(AF_INET, FRIENDIP, &addr);
-    if (res != 1) {
-        printf("IP address is invalid\n");
-    }
-    sk_addr.sin_addr.s_addr = addr.s_addr;
-
-    #endif
-
-
-    #ifdef LOCAL
-
-    struct sockaddr_un sk_addr = {0};
-    sk_addr.sun_family = AF_UNIX;
-    strncpy(sk_addr.sun_path, PATH, sizeof(sk_addr.sun_path) - 1);
-
-    #endif
-
-    // bind - для тех сокетов, который появляются в системе, для остальных не надо 
-
-    res = connect(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
-    if (res < 0) {
-        ERROR(errno);
-        return -1;
-    }
-
-    #endif
-
-    #ifdef UDP
-        
-    struct sockaddr_in sk_addr;
-    sk_addr.sin_family = AF_INET;
-    sk_addr.sin_port = htons(PORT); /* using here htons for network byte order conversion */
-    sk_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-    /* Binding to address */
-    //ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
-    // if (ret < 0) {
-    //     ERROR(errno);
-    //     exit(EXIT_FAILURE);
-    // }
-
-    /* Binding socket */
-    struct sockaddr_in bind_data;
-    bind_data.sin_family = AF_INET;
-    bind_data.sin_port = htons(0);
-    bind_data.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    ret = bind(sk, (struct sockaddr*) &bind_data, sizeof(bind_data));
-    if (ret < 0) {
-        ERROR(errno);
         exit(EXIT_FAILURE);
     }
+
+    // bind - для тех сокетов, который появляются в системе, для остальных не надо 
+    /* Binding socket */
+    addr_init(&sk_bind, INADDR_ANY);
 
     /* Allowing broadcast */
     int confirm = 1;
     setsockopt(sk, SOL_SOCKET, SO_BROADCAST, &confirm, sizeof(confirm));
 
-    struct sockaddr_in receiver_data;
-    receiver_data.sin_family = AF_INET;
-    receiver_data.sin_port = htons(PORT); /* using here htons for network byte order conversion */
-    receiver_data.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    addr_init(&sk_broad, INADDR_BROADCAST);
     
 
     while(1) {
@@ -121,6 +43,7 @@ int main(int argc, char** argv) {
         memset(input, 0, BUFSIZ);
         memset(cmd, 0, CMDSIZE);
         memset(args, 0, MSGSIZE);
+
         ret = get_input(input);
         if (ret < 0) {
             printf("Error in input.\n");
@@ -162,16 +85,11 @@ int main(int argc, char** argv) {
         if (strncmp(cmd, QUIT, QUIT_LEN) == 0) {
             printf("Exiting client.\n");
             return 0;
-        };
-
+        }
 
         /* For now pid is identifier */
         pid_t pid = getpid();
-
         /* Sending message containing command, client identifier and arguments */
-        struct message msg;
-        struct sockaddr_in sender_data;
-        socklen_t addrlen = sizeof(sender_data);
 
         memset(&msg, '\0', sizeof(struct message));
         memcpy(msg.cmd, cmd, cmd_len);
@@ -179,85 +97,20 @@ int main(int argc, char** argv) {
         memcpy(msg.data, args, args_len);
 
         printf("Message to be sent:\n");
-        print_info(&msg);
-
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
         printf("Sending command\n");
 
         /* Send broadcast message */
         if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
-            /* Buffer for IP address from server */
-            char buf[MSGSIZE];
-
-            printf("Sending broadcast message\n");
-            ret = send_message(sk, &msg, sizeof(struct message), &receiver_data);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            if (ret < 0) {
-                fprintf(stderr, "Error sending message\n");
-                close(sk);
-                exit(EXIT_FAILURE);
-            }
-
-            ret = recvfrom(sk, buf, MSGSIZE, 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                close(sk);
-                ERROR(errno);
-                return -1;
-            }
-
-            printf("Bytes received: %d\n", ret);
-            char* addr = inet_ntoa(sender_data.sin_addr);
-            if (addr == NULL) {
-                printf("Server address invalid\n");
-            }
-            printf("Server address received from broadcast: %s\n", addr);
-            print_info(&msg);
-
+            ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
         } else {
-            ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
-            printf("Bytes sent: %d\n\n\n", ret);
-
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &sender_data, &addrlen);
-            if (ret < 0) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-
-            printf("Bytes received: %d\n", ret);
-            printf("Message received:\n");
-            print_info(&msg);
+            /* Send other message */
+            send_to_server(sk, &msg, &sk_broad, &server_data, &addrlen);
         }
-
-        /* Here we manually enter commands */
-
-    //     printf("Enter number of arguments:");
-    //     ret = scanf("%d", &argc);
-    //     if (ret != 1) {
-    //         printf("Error reading input\n");
-    //     }
-
-    //     for (int i = 0; i < argc; ++i) {
-    //         argv[i] = (char*) calloc(MSGSIZE, sizeof(char)); // Do not forget to free later
-    //     }
-
-    //     printf("Enter arguments:");
-    //     for (int i = 0; i < argc; ++i) {
-    //         ret = scanf("%s", argv[i]);
-    //         if (ret != 1) {
-    //             printf("Error reading input\n");
-    //         }
-    //     }
-
-    //     which_cmd = check_input(argc, argv, &command, &arg);
-    //     if (which_cmd == BAD_CMD || command == NULL) {
-    //         fprintf(stderr, "Error in command recognition\n");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     printf("Command entered: %s\n", command);
     }
     close(sk);
-
-    #endif
 
     return 0;
 }

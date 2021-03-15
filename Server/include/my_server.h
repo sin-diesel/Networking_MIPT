@@ -30,21 +30,8 @@
 /* For multi-threaded server */
 #include <pthread.h>
 
-/* For communication between computers */
-//#define COMM
-//#define FRIENDIP "192.168.43.159"
-
-/* For internet communication */
-//#define INET
-
 /* UDP server */
 #define UDP
-
-
-//#define LOCAL
-
-/* TCP server */
-//#define TCP
 
 /* Debugging macros */
 #define DEBUG 0
@@ -138,18 +125,42 @@ int check_input(int argc, char** argv, char** command, char** arg);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 
-void* handle_connection(void* client_pipe);
-
 int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
 
+int init_shell(int* pid);
+
 void start_shell(char* buf, char* input, char* cwd);
 
 void init_daemon();
+
+void mutex_init(pthread_mutex_t* mutexes, int* id_map);
+
+void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data);
+
+void* handle_connection(void* memory);
+
+void check_thread(pthread_t* thread_ids, struct message* thread_memory, int* id_map, struct message* msg, void* handle_connection);
+
+void terminate_server(int sk);
+
+void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
+
+void reply_to_client(struct message* msg);
+
+void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, \
+                     struct sockaddr_in* server_data, socklen_t* addrlen); 
+
+void ask_broadcast(int sk, struct message* msg, struct sockaddr_in* sk_broad, \
+                     struct sockaddr_in* server_data, socklen_t* addrlen);
 
 int get_input(char* input);
 
 int get_cmd(char* input, char* cmd);
 
 int get_args(char* input, char* args);
+
+void addr_init(struct sockaddr_in* sk_addr, in_addr_t addr);
+
+void udp_work();

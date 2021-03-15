@@ -7,16 +7,21 @@
 3) Add client input  DONE
 4) Add broadcast DONE
 5) Add exit in server and client DONE
-6) Add shell command to change cwd in corresponding thread 
-7) Fix no job control when first starting bash
-8) add cd arguments to bash
+6) Add shell command to change cwd in corresponding thread  DONE
+7) Fix no job control when first starting bash DONE
+8) add cd arguments to bash DONE
+9) add tcp_init and udp_init functions DONE
+10) split big output from bash into packages DONE
+11) Fix bash settings, add continous bash operation
+12) Fix mutexes locking/unlocking
 */
 
 /* Print message info */
 void print_info(struct message* msg) {
-    printf("ID: %d\n", msg->id);
-    printf("Command: %s\n", msg->cmd);
-    printf("Data: %s\n", msg->data);
+    LOG("Message received: %s\n", "");
+    LOG("ID: %d\n", msg->id);
+    LOG("Command: %s\n", msg->cmd);
+    LOG("Data: %s\n", msg->data);
 }
 
 /* return number of command to be sent to server */
@@ -88,15 +93,8 @@ int lookup(int* id_map, int n_ids, pid_t id) {
     return 0;
 }
 
-
-void start_shell(char* buf, char* input, char* cwd) {
-    LOG("Starting shell on server%s\n", "");
+int init_shell(int* pid) {
     int ret = 0;
-
-    char input_copy[BUFSIZ];
-    /* Copying buffer */
-    strcpy(input_copy, input);
-
     int fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
     if (fd < 0) {
         LOG("Error opening /dev/ptmx: %s\n", strerror(errno));
@@ -142,8 +140,8 @@ void start_shell(char* buf, char* input, char* cwd) {
     }
 
 
-    pid_t pid = fork();
-    if (pid == 0) {
+    *pid = fork();
+    if (*pid == 0) {
         dup2(resfd, STDIN_FILENO);
         dup2(resfd, STDOUT_FILENO);
         dup2(resfd, STDERR_FILENO);
@@ -158,6 +156,22 @@ void start_shell(char* buf, char* input, char* cwd) {
         LOG("Error in exec: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+    return fd;
+}
+
+
+
+void start_shell(char* buf, char* input, char* cwd) {
+    LOG("Starting shell on server%s\n", "");
+    int ret = 0;
+
+    pid_t pid;
+    int fd = init_shell(&pid);
+
+    char input_copy[BUFSIZ];
+    /* Copying buffer */
+    strcpy(input_copy, input);
 
     /* Add \n to the end of command assuming we have enough space */
     int cmd_len = strlen(input);
@@ -178,7 +192,6 @@ void start_shell(char* buf, char* input, char* cwd) {
 
     LOG("Cmd: %s\n", cmd);
 
-    // LOG("Command to be executed:%s", cmd);
     LOG("Args: %s\n", args);
     /* Change directory if cd */
     if (strncmp(cmd, CD, CD_LEN) == 0) {
@@ -211,7 +224,9 @@ void start_shell(char* buf, char* input, char* cwd) {
     /* Copy back to main buffer. If input has not been changed, than everything
         is ok */
 
-    cmd_len = strlen(new_input);                                
+    cmd_len = strlen(new_input);   
+    LOG("Input to shell len: %d\n", cmd_len);
+    LOG("Input to shell: %s\n", new_input);                             
 
     ret = write(fd, new_input, cmd_len);
     if (ret != cmd_len) {
@@ -229,7 +244,6 @@ void start_shell(char* buf, char* input, char* cwd) {
     /* Here is a problem: we always receive command promt at the end of reading
         therefore, stop at the second output */
     
-    int cmd_num = 1;
     char real_output[BUFSIZ];
     int offset = 0;
 
@@ -382,3 +396,196 @@ int get_args(char* input, char* args) {
     return cmd_len;
 }
 
+void addr_init(struct sockaddr_in* sk_addr, in_addr_t addr) {
+    sk_addr->sin_family = AF_INET;
+    sk_addr->sin_port = htons(PORT); /* using here htons for network byte order conversion */
+    sk_addr->sin_addr.s_addr = htonl(addr);
+}
+
+void mutex_init(pthread_mutex_t* mutexes, int* id_map) {
+    int ret = 0;
+    for (int i = 0; i < MAXCLIENTS; ++i) {
+        /* Initialize mutexes */
+        ret = pthread_mutex_init(&mutexes[i], NULL);
+        if (ret < 0) {
+            ERROR(errno);
+            LOG("Error initializing mutex: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        id_map[i] = 0;
+    }
+}
+
+
+
+void udp_init(struct sockaddr_in* sk_addr, in_addr_t addr) {
+    sk_addr->sin_family = AF_INET;
+    sk_addr->sin_port = htons(PORT); /* using here htons for network byte order conversion */
+    sk_addr->sin_addr.s_addr = htonl(addr);
+}
+
+void any_init(struct sockaddr_in* sk_addr) {
+    sk_addr->sin_family = AF_INET;
+    sk_addr->sin_port = htons(PORT);
+    sk_addr->sin_addr.s_addr = htonl(INADDR_ANY);
+}
+
+void broad_init(struct sockaddr_in* sk_addr) {
+    sk_addr->sin_family = AF_INET;
+    sk_addr->sin_port = htons(PORT); /* using here htons for network byte order conversion */
+    sk_addr->sin_addr.s_addr = htonl(INADDR_BROADCAST);
+}
+
+void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data) {
+    
+    int ret = 0;
+    socklen_t addrlen;
+
+    /* Receiving message from client */
+    addrlen = sizeof(client_data);
+
+    ret = recvfrom(sk, msg, sizeof(struct message), 0, (struct sockaddr*) client_data, &addrlen);
+    if (ret < 0) {
+        ERROR(errno);
+        LOG("Error receiving msg: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    /* Copy client address manually */
+    memcpy(&(msg->client_data), client_data, sizeof(struct sockaddr_in));
+
+    LOG("\n\n\nBytes received: %d\n", ret);
+    LOG("Message size expected: %ld\n", sizeof(struct message));
+
+    char* addr = inet_ntoa(client_data->sin_addr);
+    if (addr == NULL) {
+        LOG("Client address invalid: %s\n", strerror(errno));
+    }
+
+    LOG("Client address: %s\n", addr);
+    LOG("Client port: %d\n", htons(client_data->sin_port));
+}
+
+void check_thread(pthread_t* thread_ids, struct message* thread_memory, int* id_map, struct message* msg, void* handle_connection) {
+    int ret = 0;
+
+    int exists = lookup(id_map, MAXCLIENTS, msg->id);
+    if (exists == 0) {
+        LOG("New client: %d\n", msg->id);
+        id_map[msg->id] = 1;
+        /* Handing over this client to a new thread */
+        ret = pthread_create(&thread_ids[msg->id], NULL, handle_connection, thread_memory);
+        if (ret < 0) {
+            LOG("Error creating thread: %s\n", strerror(errno));
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+
+    } else {
+        LOG("Old client: %d\n", msg->id);
+    }
+}
+
+void terminate_server(int sk) {
+    LOG("Closing server%s", "");
+    close(sk);
+    unlink(PATH);
+    exit(EXIT_SUCCESS);
+}
+
+void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data) {
+    int ret = 0;
+
+    LOG("Broadcasting server IP%s\n", "");
+    char reply[] = "Reply to client";
+    memcpy(msg->data, reply, sizeof(reply));
+
+    ret = sendto(sk, reply, sizeof(reply), 0,           \
+                (struct sockaddr*) client_data, sizeof(struct sockaddr_in));
+    if (ret < 0) {
+        LOG("Error sending message to client: %s\n", strerror(errno));
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void reply_to_client(struct message* msg) {
+    int ret = 0;
+    int sk = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sk < 0) {
+        LOG("Error creating sk: %s\n", strerror(errno));
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+
+    LOG("SENDING MESSAGE BACK TO CLIENT%s\n", "");
+    /* Print info */
+    LOG("Message received: %s\n", "");
+    LOG("ID: %d\n", msg->id);
+    LOG("Command: %s\n", msg->cmd);
+    LOG("Data: %s\n", msg->data);
+
+    ret = send_message(sk, msg, sizeof(struct message), &msg->client_data);
+    if (ret < 0) {
+        LOG("Error sending message: %s\n", strerror(errno));
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+
+    close(sk);
+    LOG("MESSAGE SENT%s\n", "");
+
+}
+
+void ask_broadcast(int sk, struct message* msg, struct sockaddr_in* sk_broad, struct sockaddr_in* server_data, socklen_t* addrlen) {
+     /* Buffer for IP address from server */
+    int ret = 0;
+    char buf[MSGSIZE];
+
+    printf("Sending broadcast message\n");
+    ret = send_message(sk, msg, sizeof(struct message), sk_broad);
+    printf("Bytes sent: %d\n\n\n", ret);
+
+    if (ret < 0) {
+        fprintf(stderr, "Error sending message\n");
+        close(sk);
+        exit(EXIT_FAILURE);
+    }
+
+    ret = recvfrom(sk, buf, MSGSIZE, 0, (struct sockaddr*) server_data, addrlen);
+    if (ret < 0) {
+        close(sk);
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Bytes received: %d\n", ret);
+    char* addr = inet_ntoa(server_data->sin_addr);
+    if (addr == NULL) {
+        printf("Server address invalid\n");
+    }
+    printf("Server address received from broadcast: %s\n", addr);
+    printf("Bytes received: %d\n", ret);
+    printf("Message received:\n");
+    printf("ID: %d\n", msg->id);
+    printf("Command: %s\n", msg->cmd);
+    printf("Data: %s\n", msg->data);
+}
+
+void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, struct sockaddr_in* server_data, socklen_t* addrlen) {
+    int ret = 0;
+    ret = send_message(sk, msg, sizeof(struct message), sk_addr);
+    printf("Bytes sent: %d\n\n\n", ret);
+
+    ret = recvfrom(sk, msg, sizeof(struct message), 0, (struct sockaddr*) server_data, addrlen);
+    if (ret < 0) {
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Bytes received: %d\n", ret);
+    printf("Message received:\n");
+    printf("ID: %d\n", msg->id);
+    printf("Command: %s\n", msg->cmd);
+    printf("Data: %s\n", msg->data);
+}
