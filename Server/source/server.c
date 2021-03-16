@@ -5,6 +5,7 @@
 
 /* Mutexes for threads */
 pthread_mutex_t mutexes[MAXCLIENTS];
+int connection_type = UDP_CON;
 
 //---------------------------------------------------
 void* handle_connection(void* memory) {
@@ -130,7 +131,13 @@ void* handle_connection(void* memory) {
             memcpy(msg.data, buf, MSGSIZE);
             LOG("Data ready to be sent to client: %s\n", msg.data);
         }   
-        reply_to_client(&msg);
+        if (connection_type == UDP_CON) {
+            LOG("UDP reply.%s\n", "");
+            reply_to_client(&msg);
+        } else {
+            LOG("TCP reply.%s\n", "");
+            tcp_reply_to_client(msg.client_sk, &msg);
+        }
     }
 
 
@@ -141,14 +148,14 @@ void* handle_connection(void* memory) {
 //---------------------------------------------------
 int main(int argc, char** argv) {
 
-    /* Choose connection type */
-
-    int connection_type = UDP_CON;
+    /* Choose connection type */;
 
     if (argc == 2) {
-        if (strcmp(argv[1], "--udp")) {
+        if (strcmp(argv[1], "--udp") == 0) {
+            printf("UDP connection set\n");
             connection_type = UDP_CON;
-        } else if (strcmp(argv[1], "--tcp")) {
+        } else if (strcmp(argv[1], "--tcp") == 0) {
+            printf("TCP connection set\n");
             connection_type = TCP_CON;
         }
     }
@@ -200,6 +207,15 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    /* First get ready for listening */
+    if (connection_type == TCP_CON) {
+        ret = listen(sk, BACKLOG);
+        if (ret < 0) {
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     /* Accept messages */
     while (1) {
 
@@ -210,15 +226,8 @@ int main(int argc, char** argv) {
 
         /* Get message from client */
         if (connection_type == UDP_CON) {
-            udp_get_msg(sk, &sk_addr, &msg, &client_data);
+            udp_get_msg(sk, &sk_addr, &msg, &client_data, UDP_CON);
         } else {
-            /* First get ready for listening */
-            ret = listen(sk, BACKLOG);
-            if (ret < 0) {
-                ERROR(errno);
-                exit(EXIT_FAILURE);
-            }
-            
             /* Accept client connections */
             int client_sk = 0;
             client_sk = accept(sk, NULL, NULL);
@@ -227,7 +236,10 @@ int main(int argc, char** argv) {
                 exit(EXIT_FAILURE);
             }
 
-            udp_get_msg(client_sk, &sk_addr, &msg, &client_data);
+            //msg.client_sk = client_sk;
+            udp_get_msg(client_sk, &sk_addr, &msg, &client_data, TCP_CON);
+            msg.client_sk = client_sk;
+            LOG("Client sk assigned: %d\n", client_sk);
 
             //tcp_get_msg(client_sk, &sk_addr, &msg, &client_data);
 

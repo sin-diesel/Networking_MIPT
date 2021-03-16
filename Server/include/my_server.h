@@ -80,6 +80,8 @@ struct message {
     char cmd[CMDSIZE];
     char data[MSGSIZE];
     struct sockaddr_in client_data;
+    /* For tcp */
+    int client_sk;
 };
 
 enum connection_type {
@@ -142,7 +144,7 @@ void init_daemon();
 
 void mutex_init(pthread_mutex_t* mutexes, int* id_map);
 
-void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data);
+void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type);
 
 void* handle_connection(void* memory);
 
@@ -153,6 +155,8 @@ void terminate_server(int sk);
 void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
 
 void reply_to_client(struct message* msg);
+
+void tcp_reply_to_client(int client_sk, struct message* msg);
 
 void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, \
                      struct sockaddr_in* server_data, socklen_t* addrlen); 

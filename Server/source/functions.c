@@ -81,6 +81,7 @@ int check_input(int argc, char** argv, char** command, char** arg) {
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr) {
     int ret = sendto(sk, msg, msg_len, 0, (struct sockaddr*) sk_addr, sizeof(*sk_addr));
     if (ret < 0) {
+        LOG("Error sending to client: %s\n", strerror(errno));
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
@@ -267,7 +268,7 @@ void start_shell(char* buf, char* input, char* cwd) {
         if (offset + ret  < BUFSIZ) {
             memcpy(output + offset, buf, ret);
             offset += ret;
-        } else {
+        } else {    
             /* If buffer is not large enough */
             break;
         }
@@ -441,7 +442,7 @@ void broad_init(struct sockaddr_in* sk_addr) {
     sk_addr->sin_addr.s_addr = htonl(INADDR_BROADCAST);
 }
 
-void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data) {
+void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type) {
     
     int ret = 0;
     socklen_t addrlen;
@@ -449,7 +450,11 @@ void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struc
     /* Receiving message from client */
     addrlen = sizeof(client_data);
 
-    ret = recvfrom(sk, msg, sizeof(struct message), 0, (struct sockaddr*) client_data, &addrlen);
+    if (connection_type == UDP_CON) {
+        ret = recvfrom(sk, msg, sizeof(struct message), 0, (struct sockaddr*) client_data, &addrlen);
+    } else {
+        ret = read(sk, msg, sizeof(struct message));
+    }
     if (ret < 0) {
         ERROR(errno);
         LOG("Error receiving msg: %s\n", strerror(errno));
@@ -535,6 +540,7 @@ void reply_to_client(struct message* msg) {
         ERROR(errno);
         exit(EXIT_FAILURE);
     }
+    LOG("Bytes sent to client:%d\n", ret);
 
     close(sk);
     LOG("MESSAGE SENT%s\n", "");
@@ -609,6 +615,20 @@ void construct_input(char* cmd, char* new_input, char* cwd) {
     }
 }
 
-void tcp_get_msg(int client_sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data) {
+void tcp_reply_to_client(int client_sk, struct message* msg) {
+    int ret = 0;
+    LOG("SENDING MESSAGE BACK TO CLIENT%s\n", "");
+    /* Print info */
+    LOG("ID: %d\n", msg->id);
+    LOG("Command: %s\n", msg->cmd);
+    LOG("Data: %s\n", msg->data);
 
+    ret = send(client_sk, msg, sizeof(struct message), 0);
+    if (ret < 0) {
+        LOG("Error sending message: %s\n", strerror(errno));
+        ERROR(errno);
+        exit(EXIT_FAILURE);
+    }
+    LOG("Bytes sent to client: %d\n", ret);
+    LOG("MESSAGE SENT%s\n", "");
 }
