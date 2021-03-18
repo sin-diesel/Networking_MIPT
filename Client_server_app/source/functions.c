@@ -1,3 +1,4 @@
+
 #include "my_server.h"
 
 
@@ -242,7 +243,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     struct pollfd pollfds;
     pollfds.fd = fd;
     pollfds.events = POLLIN;
-    int wait_ms = 1000;
+    int wait_ms = 100;
 
     
     char output[BUFSIZ];
