@@ -1,0 +1,40 @@
+script sh?
+bash script.h
+
+STR = "Hello" // a variable
+echo $(STR) // usage 
+//wildcards
+
+STR = $(*.o) // for example: main.o led.o ... 
+gcc: CC, CFLAGS
+g++: CXX, CXXFLAGS
+
+targets:
+install:
+cp ... /usr/bin
+uninstall:
+test:
+
+
+можно запускать: make CC==gcc-8
+еще вариант: export CC=gcc-8
+
+
+targets:
+all:
+	echo "Hello"
+
+%o ( = $@): %c = (= $<) 
+	$(CC) -c $(CFLAGS) $< -o $@ // все .o зависят от всех .c
+
+prog: %.o
+	$(CC) $< -o prog $(LDFLAGS)
+
+	-j8 - 8 потоков. Мейкфайлы можно запускать в потоками
+	make -j8 prog - можно в 8 потоках (параллельно таргеты собираются)
+
+	pkgconfig
+
+	у make нет реестра зависимостей! Не знает, как собирать, в каком порядке
+
+cmake/meson ... - теперь используются вместо cmake

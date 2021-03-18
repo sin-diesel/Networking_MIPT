@@ -4,7 +4,8 @@
 
 int main(int argc, char** argv) {
 
-    int connection_type = -1;
+    /* UDP connection by default */
+    int connection_type = UDP_CON;
 
     if (argc == 2) {
         if (strcmp(argv[1], "--udp") == 0) {
@@ -13,6 +14,9 @@ int main(int argc, char** argv) {
         } else if (strcmp(argv[1], "--tcp") == 0) {
             printf("TCP connection set\n");
             connection_type = TCP_CON;
+        } else {
+            printf("Invalid connection type.\n");
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -37,6 +41,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    /* Initialize client address */
     addr_init(&sk_addr, INADDR_LOOPBACK);
 
     /* Binding socket */
@@ -130,11 +135,12 @@ int main(int argc, char** argv) {
         if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
             if (connection_type == TCP_CON) {
                 printf("Unicast only in TCP.\n");
+                printf("Enter another command");
             } else {
                 ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
             }
         } else {
-            /* Send other message */
+            /* Send other message either with send or send_message depending on the protocol */
             if (connection_type == UDP_CON) {
                 ret = send_message(sk, &msg, sizeof(struct message), &sk_addr);
             } else {
@@ -146,7 +152,6 @@ int main(int argc, char** argv) {
             if (connection_type == UDP_CON) {
                 ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &server_data, &addrlen);
             } else {
-                char buf[BUFSIZ];
                 while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
                     printf("Bytes received: %d\n", ret);
                 }

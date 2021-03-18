@@ -120,68 +120,7 @@ void* handle_connection(void* memory) {
         LOG("Client port: %d\n", msg.client_data.sin_port);
 
         /* Handle client's command */   
-        if (strncmp(msg.cmd, LS, LS_LEN) == 0) {
-
-        //     /* Redirect output to pipe and then read it */
-        //     int ls_pipe[2];
-        //     ret = pipe(ls_pipe);
-
-        //     if (ret < 0) {
-        //         LOG("Error creating pipe: %s\n", strerror(errno));
-        //         ERROR(errno);
-        //         exit(EXIT_FAILURE);
-        //     }
-
-        //     int status = 0;
-
-        //     int pid = fork();
-        //     if (pid < 0) {
-        //         LOG("Error forking: %s\n", strerror(errno));
-        //         ERROR(errno);
-        //         exit(EXIT_FAILURE);
-        //     }
-        //     /* Execute ls command and save output, then send it to client */
-        //     if (pid == 0) {
-        //         char* arg[3];
-        //         arg[0] = "ls";
-        //         arg[1] = dir;
-        //         arg[2] = NULL;
-
-        //         /* Redirect to pipe */
-        //         ret = dup2(ls_pipe[1], STDOUT_FILENO);
-        //         close(ls_pipe[0]); // not reading
-
-        //         if (ret < 0) {
-        //             LOG("Error dupping: %s\n", strerror(errno));
-        //             ERROR(errno);
-        //             exit(EXIT_FAILURE);
-        //         }   
-
-        //         execvp(arg[0],arg);
-        //         ERROR(errno);
-        //         exit(EXIT_FAILURE);
-        //     }
-
-        //     /* Wait until read is complete */
-        //     wait(&status);
-
-        //     /* Read data to buffer */
-        //     ret = read(ls_pipe[0], buf, MSGSIZE);
-        //     if (ret < 0) {
-        //         LOG("Error reading from pipe: %s\n", strerror(errno));
-        //         ERROR(errno);
-        //         exit(EXIT_FAILURE);
-        //     }
-
-        //     LOG("Bytes read from pipe: %d\n", ret);
-        //     LOG("LS result: %s\n", buf);
-
-        //     /* Copy data from buf to msg */
-        //     memcpy(msg.data, buf, MSGSIZE);
-        //     close(ls_pipe[0]);
-        //     close(ls_pipe[1]);
-
-        } else if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
+        if (strncmp(msg.cmd, CD, CD_LEN) == 0) {
 
             LOG("Cwd: %s\n", dir);
             memcpy((void*) dir, &msg.data, MSGSIZE);
@@ -226,7 +165,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in sk_addr;
 
     /* Run server as daemon */
-    //init_daemon();
+    init_daemon();
 
     if (connection_type == UDP_CON) {
         sk = socket(AF_INET, SOCK_DGRAM, 0);
@@ -286,8 +225,6 @@ int main(int argc, char** argv) {
         int* pclient_sk = NULL;
         int client_sk;
 
-        int clients_count = 0;
-
         /* Get message from client */
         if (connection_type == UDP_CON) {
             udp_get_msg(sk, &sk_addr, &msg, &client_data, UDP_CON);
@@ -345,67 +282,6 @@ int main(int argc, char** argv) {
             pthread_mutex_unlock(&mutexes[msg.id]);
         }
         printf("\n\n\n");
-
-        #ifdef TCP
-
-        int client_sk = 0;
-
-        client_sk = accept(sk, NULL, NULL);
-
-        if (client_sk < 0) {
-            ERROR(errno);
-            exit(EXIT_FAILURE);
-        }
-            
-
-        /* read message that was accepted */
-        /* buf for accepting command */
-        char buf[BUFSZ] = {};
-        /* message buffer */
-        char msg[BUFSZ] = {};
-        res = read(client_sk, buf, BUFSZ);
-
-        if (res < 0 || res >= BUFSZ) {
-            //fprintf(stderr, "Unexpected read error or overflow %d\n", res);
-            ERROR(errno);
-            return -1;
-        }
-
-        /* Commands are: PRINT, EXIT */
-        if (strcmp(buf, PRINT) == 0) {
-            /* read message and print it */
-            res = read(client_sk, msg, BUFSZ);
-            if (res < 0 || res >= BUFSZ) {
-                printf("Unexpected read error or overflow %d\n", res);
-                return -1;
-            }
-        /* Print message */
-        printf("Message from client: %s\n", msg);
-
-        /* then change sockaddr if needed */
-        #ifdef INET
-
-            struct in_addr addr;
-            res = inet_pton(AF_INET, msg, &addr);
-            if (res != 1) {
-                printf("IP address is invalid\n");
-            }
-            sk_addr.sin_addr.s_addr = addr.s_addr;
-
-        #endif
-
-        } else if (strcmp(buf, EXIT) == 0) {
-            close(client_sk);
-            unlink(PATH);
-            exit(EXIT_SUCCESS);
-        } else {
-            printf("Command from client not recognized\n");
-        }
-
-            /* finish communication */
-        close(client_sk);
-
-        #endif
         // примечание: если файл (или сокет) удалили с файловой системы, им еще могут пользоваться программы которые не закрыли его до закрытия
     }
 

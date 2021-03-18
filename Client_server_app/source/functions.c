@@ -138,8 +138,8 @@ int init_shell(int* pid) {
     term.c_oflag = 5;
     term.c_iflag = 17664;
     term.c_lflag = 35387;
+    
     /* Remove echo flag */
-    tcflag_t mask = ~(1 << sizeof(tcflag_t));
     LOG("C_lflag before removing ECHO: %d\n", term.c_lflag);
     term.c_lflag = term.c_lflag & (~ECHO);   
     LOG("C_lflag after removing ECHO: %d\n", term.c_lflag);
@@ -577,10 +577,6 @@ void ask_broadcast(int sk, struct message* msg, struct sockaddr_in* sk_broad, st
     }
     printf("Server address received from broadcast: %s\n", addr);
     printf("Bytes received: %d\n", ret);
-//     printf("Message received:\n");
-//     printf("ID: %d\n", msg->id);
-//     printf("Command: %s\n", msg->cmd);
-//     printf("Data: %s\n", msg->data);
 }
 
 void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, struct sockaddr_in* server_data, socklen_t* addrlen) {

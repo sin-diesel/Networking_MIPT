@@ -1,0 +1,4 @@
+struct winsize sz; - для настройки размера окна терминала
+ioctl(fd, TIOCGWINSZ, ,&sz);
+ioctl(fd, TIOSWINSZ, &sz);
+man fty_ioctl
