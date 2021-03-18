@@ -77,6 +77,7 @@ static const char log_path[] = "/var/log/server.log";
 /* Client_data field to send info back to client */
 struct message {    
     int id;
+    int packets_count;
     char cmd[CMDSIZE];
     char data[MSGSIZE];
     struct sockaddr_in client_data;
@@ -138,7 +139,7 @@ void print_info(struct message* msg);
 
 int init_shell(int* pid);
 
-void start_shell(char* buf, char* input, char* cwd);
+void start_shell(char* buf, char* input, char* cwd, struct message* msg);
 
 void init_daemon();
 

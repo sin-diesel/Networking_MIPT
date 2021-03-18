@@ -150,28 +150,102 @@ int main(int argc, char** argv) {
             
             /* Receive reply from server */
             if (connection_type == UDP_CON) {
-                ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &server_data, &addrlen);
+                /* Receive all packets from server */
+                int packets_count = 0;
+                /* Set wait time */
+                struct timeval tv;
+                tv.tv_sec = 1;
+                tv.tv_usec = 0;
+                if (setsockopt(sk, SOL_SOCKET, SO_RCVTIMEO, &tv,sizeof(tv)) < 0) {
+                    ERROR(errno);
+                }
+
+                while (1) {
+                    ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &server_data, &addrlen);
+                    if (ret < 0) {
+                        /* Check errno */
+                        break;
+                        ERROR(errno);
+                        close(sk);
+                        exit(EXIT_FAILURE);
+                    }
+                    
+                    if (ret != sizeof(struct message)) {
+                        printf("Error receiving message in client\n");
+                        close(sk);
+                        exit(EXIT_FAILURE);
+                    }
+                    printf("Message received:\n");
+                    printf("ID: %d\n", msg.id);
+                    printf("Command: %s\n", msg.cmd);
+                    printf("Data: %s\n", msg.data);
+                }
+                // packets_count = msg.packets_count - 1;
+
+                // printf("Bytes received: %d\n", ret);
+                // if (ret < 0) {
+                //     ERROR(errno);
+                //     close(sk);
+                //     exit(EXIT_FAILURE);
+                // }
+                
+                // if (ret != sizeof(struct message)) {
+                //     printf("Error receiving message in client\n");
+                //     close(sk);
+                //     exit(EXIT_FAILURE);
+                // }
+                // printf("Message received:\n");
+                // printf("ID: %d\n", msg.id);
+                // printf("Command: %s\n", msg.cmd);
+                // printf("Data: %s\n", msg.data);
+                // printf("Packets to be processed: %d\n", packets_count);
+
+                // while (packets_count != 0) {
+                //     printf("Packets left: %d\n", packets_count);
+                //     ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) &server_data, &addrlen);
+                //     printf("Bytes received: %d\n", ret);
+
+                //     if (ret < 0) {
+                //         ERROR(errno);
+                //         close(sk);
+                //         exit(EXIT_FAILURE);
+                //     }
+                    
+                //     if (ret != sizeof(struct message)) {
+                //         printf("Error receiving message in client\n");
+                //         close(sk);
+                //         exit(EXIT_FAILURE);
+                //     }
+                //     printf("Message received:\n");
+                //     printf("ID: %d\n", msg.id);
+                //     printf("Command: %s\n", msg.cmd);
+                //     printf("Data: %s\n", msg.data);
+
+                //     packets_count--;
+                // }
+
             } else {
                 while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
                     printf("Bytes received: %d\n", ret);
                 }
             }
-            printf("Bytes received: %d\n", ret);
-            if (ret < 0) {
-                ERROR(errno);
-                close(sk);
-                exit(EXIT_FAILURE);
-            }
+            // printf("Bytes received: %d\n", ret);
+            // if (ret < 0) {
+            //     /* check errno */
+            //     ERROR(errno);
+            //     close(sk);
+            //     exit(EXIT_FAILURE);
+            // }
             
-            if (ret != sizeof(struct message)) {
-                printf("Error receiving message in client\n");
-                close(sk);
-                exit(EXIT_FAILURE);
-            }
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
+            // if (ret != sizeof(struct message)) {
+            //     printf("Error receiving message in client\n");
+            //     close(sk);
+            //     exit(EXIT_FAILURE);
+            // }
+            // printf("Message received:\n");
+            // printf("ID: %d\n", msg.id);
+            // printf("Command: %s\n", msg.cmd);
+            // printf("Data: %s\n", msg.data);
         }
     }
     close(sk);

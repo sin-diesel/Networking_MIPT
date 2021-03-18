@@ -16,6 +16,7 @@
 11) Fix bash settings, add continous bash operation
 12) Fix mutexes locking/unlocking DONE
 13) fix buffers DONE
+14) add broadcast again
 */
 
 /* Print message info */
@@ -175,7 +176,7 @@ int init_shell(int* pid) {
 
 
 
-void start_shell(char* buf, char* input, char* cwd) {
+void start_shell(char* buf, char* input, char* cwd, struct message* msg) {
     LOG("Starting shell on server%s\n", "");
     int ret = 0;
 
@@ -248,6 +249,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     
     char output[BUFSIZ];
     int offset = 0;
+    int msg_count = 0;
 
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
 
@@ -267,21 +269,52 @@ void start_shell(char* buf, char* input, char* cwd) {
             exit(EXIT_FAILURE);
         }
         
-        if (offset + ret  < BUFSIZ) {
+        if (offset + ret  < MSGSIZE) {
             memcpy(output + offset, buf, ret);
             offset += ret;
         } else {    
-            /* If buffer is not large enough */
-            break;
+            /* If buffer is not large enough, send message */
+            ++msg_count;
+            memcpy(buf, output, BUFSIZ);
+            LOG("Message count: %d\n", msg_count)
+            LOG("Output total size: %d\n", offset);
+            buf[offset] = '\0';
+            LOG("Full output: %s\n", buf);
+            memcpy(msg->data, buf, MSGSIZE);
+            msg->packets_count = msg_count;
+            reply_to_client(msg);
+
+            offset = 0;
+            memset(buf, 0, BUFSIZ);
+            memset(output, 0, BUFSIZ);
         }
     }
 
-    /* Copy back to main buffer */
+    ++msg_count;
     memcpy(buf, output, BUFSIZ);
-    /* Null terminate */
+    LOG("Message count: %d\n", msg_count)
     LOG("Output total size: %d\n", offset);
     buf[offset] = '\0';
     LOG("Full output: %s\n", buf);
+
+    memcpy(msg->data, buf, MSGSIZE);
+    msg->packets_count = msg_count;
+    reply_to_client(msg);
+
+
+    /* Copy back to main buffer */
+    //memcpy(buf, output, BUFSIZ);
+    /* Null terminate */
+    // LOG("Output total size: %d\n", offset);
+    // buf[offset] = '\0';
+    // LOG("Full output: %s\n", buf);
+
+    //memcpy(msg.data, buf, MSGSIZE);
+
+
+
+    // LOG("UDP reply.%s\n", "");
+    // reply_to_client(&msg);
     
     /* Terminate bash */
     ret = kill(pid, SIGTERM);

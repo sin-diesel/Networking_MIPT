@@ -59,7 +59,7 @@ void* tcp_handle_connection(void* client_memory) {
 
                 LOG("Message data to be executed in shell:%s\n", msg.data);
                 /* Send cwd so shell knows where to execute command */
-                start_shell(buf, msg.data, dir);
+                start_shell(buf, msg.data, dir, &msg);
                 /* Copy data from shell return buf to msg */
                 memcpy(msg.data, buf, MSGSIZE);
                 LOG("Data ready to be sent to client: %s\n", msg.data);
@@ -125,18 +125,23 @@ void* handle_connection(void* memory) {
             LOG("Cwd: %s\n", dir);
             memcpy((void*) dir, &msg.data, MSGSIZE);
             LOG("Changing cwd to %s\n", msg.data);
+            LOG("UDP reply.%s\n", "");
+            reply_to_client(&msg);
 
         } else if (strncmp(msg.cmd, SHELL, SHELL_LEN) == 0) {
 
             LOG("Message data to be executed in shell:%s\n", msg.data);
             /* Send cwd so shell knows where to execute command */
-            start_shell(buf, msg.data, dir);
+            /* Also send messages, multiple if the output is too big */
+
+            start_shell(buf, msg.data, dir, &msg);
             /* Copy data from shell return buf to msg */
-            memcpy(msg.data, buf, MSGSIZE);
-            LOG("Data ready to be sent to client: %s\n", msg.data);
+            //memcpy(msg.data, buf, MSGSIZE);
+            // LOG("Data ready to be sent to client: %s\n", msg.data);
+
         }   
-        LOG("UDP reply.%s\n", "");
-        reply_to_client(&msg);
+        // LOG("UDP reply.%s\n", "");
+        // reply_to_client(&msg);
     }
 
 
