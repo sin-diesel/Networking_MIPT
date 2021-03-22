@@ -630,3 +630,7 @@ void tcp_reply_to_client(int client_sk, struct message* msg) {
     LOG("Bytes sent to client: %d\n", ret);
     LOG("MESSAGE SENT%s\n", "");
 }
+
+// void connect_to_server(struct in_addr) {
+
+// }

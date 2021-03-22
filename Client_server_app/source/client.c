@@ -6,29 +6,34 @@ int main(int argc, char** argv) {
 
     /* UDP connection by default */
     int connection_type = UDP_CON;
+    int sk = 0;
+    struct sockaddr_in sk_addr;
+    struct sockaddr_in sk_bind;
+    struct sockaddr_in sk_broad;
 
-    if (argc == 2) {
+    in_addr_t ipin_addr = -1;
+    char* ip_addr = NULL;
+
+    struct message msg;
+    struct sockaddr_in server_data;
+    socklen_t addrlen = sizeof(server_data);
+    int ret = 0;
+
+    if (argc >= 2) {
         if (strcmp(argv[1], "--udp") == 0) {
             printf("UDP connection set\n");
             connection_type = UDP_CON;
         } else if (strcmp(argv[1], "--tcp") == 0) {
             printf("TCP connection set\n");
             connection_type = TCP_CON;
+        } else if (strcmp(argv[1], "--ip") == 0) {
+            ip_addr =  argv[2];
+            printf("IP address entered: %s\n", ip_addr);
         } else {
             printf("Invalid connection type.\n");
             exit(EXIT_FAILURE);
         }
     }
-
-    int sk = 0;
-    struct sockaddr_in sk_addr;
-    struct sockaddr_in sk_bind;
-    struct sockaddr_in sk_broad;
-    struct message msg;
-    struct sockaddr_in server_data;
-    socklen_t addrlen = sizeof(server_data);
-
-    int ret = 0;
 
     /* Init socket address and family */
     if (connection_type == UDP_CON) {
@@ -41,8 +46,24 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    /* Initialize client address */
-    addr_init(&sk_addr, INADDR_LOOPBACK);
+    /* Initialize client address, either with loopback or with IP */
+    if (ip_addr == NULL) {
+        addr_init(&sk_addr, INADDR_LOOPBACK);
+    } else {
+        ipin_addr = inet_addr(ip_addr);
+        if (ipin_addr < 0) {
+            printf("Error converting IP to valid address.\n");
+            exit(EXIT_FAILURE);
+        }
+        addr_init(&sk_addr, ipin_addr);
+        struct in_addr addr;
+        ret = inet_pton(AF_INET, "192.168.1.11", &addr);
+        if (ret != 1) {
+            printf("IP address is invalid\n");
+        }
+        sk_addr.sin_addr.s_addr = addr.s_addr;
+        //printf("IP address of server assigned:%s\n", ip_addr);
+    }
 
     /* Binding socket */
     addr_init(&sk_bind, INADDR_ANY);
