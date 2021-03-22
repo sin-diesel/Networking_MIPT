@@ -57,12 +57,12 @@ int main(int argc, char** argv) {
         }
         addr_init(&sk_addr, ipin_addr);
         struct in_addr addr;
-        ret = inet_pton(AF_INET, "192.168.1.11", &addr);
+        ret = inet_pton(AF_INET, ip_addr, &addr);
         if (ret != 1) {
             printf("IP address is invalid\n");
         }
         sk_addr.sin_addr.s_addr = addr.s_addr;
-        //printf("IP address of server assigned:%s\n", ip_addr);
+        printf("IP address of server assigned:%s\n", ip_addr);
     }
 
     /* Binding socket */
