@@ -6,7 +6,8 @@
 /* Mutexes for threads */
 pthread_mutex_t mutexes[MAXCLIENTS];
 int client_sockets[MAXCLIENTS];
-int connection_type = -1;
+/* Connection type, TCP or UDP */
+static int connection_type = NONE;
 
 void* tcp_handle_connection(void* client_memory) {
 
@@ -151,82 +152,43 @@ int main(int argc, char** argv) {
 
     /* UDP connection by default */
     connection_type = UDP_CON;
-    
-    if (argc == 2) {
-        if (strcmp(argv[1], "--udp") == 0) {
-            printf("UDP connection set\n");
-            connection_type = UDP_CON;
-        } else if (strcmp(argv[1], "--tcp") == 0) {
-            printf("TCP connection set\n");
-            connection_type = TCP_CON;
-        }
-    }
-
-    /* Creating and initializing socket */
-    int sk = 0;
     int ret = 0;
+    int sk = 0;
     struct sockaddr_in sk_addr;
-
-    /* Run server as daemon */
-    init_daemon();
-
-    if (connection_type == UDP_CON) {
-        sk = socket(AF_INET, SOCK_DGRAM, 0);
-    } else {
-        sk = socket(AF_INET, SOCK_STREAM, 0);
-    }
-
-    if (sk < 0) {
-        ERROR(errno);
-        LOG("Error opening socket: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    /* Init socket address and family */
-    addr_init(&sk_addr, INADDR_ANY);
-
-    ret = bind(sk, (struct sockaddr*) &sk_addr, sizeof(sk_addr));
-    if (ret < 0) {
-        LOG("Error binding: %s\n", strerror(errno));
-        ERROR(errno);
-        close(sk);
-        //exit(EXIT_FAILURE);
-    }
-    
     /* Set up fixed amount of thread identifiers, each thread identifier associates
     with a particular client */
     pthread_t thread_ids[MAXCLIENTS];
+    struct message* memory = NULL;
 
     /* Basically bitmap */
     int id_map[MAXCLIENTS];
 
-    mutex_init(mutexes, id_map);
-
-    /* Allocating memory for sharing between threads */
-    struct message* memory = (struct message*) calloc(MAXCLIENTS, sizeof(struct message));
-    if (memory == NULL) {
-        LOG("Error allocating memory for clients: %s\n", strerror(errno));
+    struct message msg = {0};
+    struct sockaddr_in client_data = {0};
+    struct message* thread_memory = NULL;
+    int* pclient_sk = NULL;
+    int client_sk = 0;
+    
+    ret = check_input(argc, argv, &connection_type);
+    if (ret < 0) {
+        printf("Incorrect option passed.\n");
         exit(EXIT_FAILURE);
     }
 
-    /* First get ready for listening */
-    if (connection_type == TCP_CON) {
-        ret = listen(sk, BACKLOG);
-        if (ret < 0) {
-            ERROR(errno);
-            exit(EXIT_FAILURE);
-        }
+
+    /* Run server as daemon */
+    init_daemon();
+
+    /* Prepare server for main routine */
+    ret = server_init(connection_type, &sk, &sk_addr, id_map, memory, mutexes);
+    if (ret < 0) {
+        exit(EXIT_FAILURE);
     }
 
     /* Accept messages */
     while (1) {
 
-        struct message msg;
         memset(&msg, '\0', sizeof(struct message));
-        struct sockaddr_in client_data;
-        struct message* thread_memory = NULL;
-        int* pclient_sk = NULL;
-        int client_sk;
 
         /* Get message from client */
         if (connection_type == UDP_CON) {

@@ -87,6 +87,7 @@ struct message {
 enum connection_type {
     UDP_CON = 0,
     TCP_CON,
+    NONE
 };
 
 /* Types of commands that can be sent to our server */
@@ -128,7 +129,10 @@ enum cmd_len {
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
 
-int check_input(int argc, char** argv, char** command, char** arg);
+int check_input(int argc, char** argv, int* connection_type);
+
+int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* id_map,
+                struct message* memory, pthread_mutex_t* mutexes);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 
@@ -142,9 +146,9 @@ void start_shell(char* buf, char* input, char* cwd);
 
 void init_daemon();
 
-void mutex_init(pthread_mutex_t* mutexes, int* id_map);
+int mutex_init(pthread_mutex_t* mutexes, int* id_map);
 
-void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type);
+int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type);
 
 void* handle_connection(void* memory);
 
