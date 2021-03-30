@@ -145,7 +145,7 @@ void print_info(struct message* msg);
 
 int init_shell(int* pid);
 
-void start_shell(char* buf, char* input, char* cwd);
+int start_shell(char* buf, char* input, char* cwd);
 
 void init_daemon();
 

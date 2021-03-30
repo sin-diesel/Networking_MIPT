@@ -26,15 +26,16 @@ void print_info(struct message* msg) {
     LOG("Client sk: %d\n", msg->client_sk);
 }
 
+//---------------------------------------------------
 /* Check options passed to server */
 int check_input(int argc, char** argv, int* connection_type) {
     if (argc == 2) {
         if (strcmp(argv[1], "--udp") == 0) {
-            printf("UDP connection set\n");
+            printf("UDP connection setting set.\n");
             *connection_type = UDP_CON;
             return 0;
         } else if (strcmp(argv[1], "--tcp") == 0) {
-            printf("TCP connection set\n");
+            printf("TCP connection setting set.\n");
             *connection_type = TCP_CON;
             return 0;
         } else {
@@ -56,7 +57,11 @@ int print_client_addr(struct message* msg) {
     return 0;
 }
 
+//---------------------------------------------------
+/* Decode which kind of message was sent to server */
 int handle_message(struct message* msg, char* dir, char* buf) {
+    int ret = 0;
+
     if (strncmp(msg->cmd, CD, CD_LEN) == 0) {
         LOG("Cwd: %s\n", dir);
         memcpy((void*) dir, msg->data, MSGSIZE);
@@ -65,7 +70,11 @@ int handle_message(struct message* msg, char* dir, char* buf) {
     } else if (strncmp(msg->cmd, SHELL, SHELL_LEN) == 0) {
         LOG("Message data to be executed in shell:%s\n", msg->data);
         /* Send cwd so shell knows where to execute command */
-        start_shell(buf, msg->data, dir);
+        ret = start_shell(buf, msg->data, dir);
+        if (ret < 0) {
+            LOG("Errors starting shell.%s\n", "");
+            return -1;
+        }
         /* Copy data from shell return buf to msg */
         memcpy(msg->data, buf, MSGSIZE);
         LOG("Data ready to be sent to client: %s\n", msg->data);
@@ -74,11 +83,12 @@ int handle_message(struct message* msg, char* dir, char* buf) {
 }
 
 /* Initialize socket, mutexes */
+//---------------------------------------------------
 int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* id_map,
                 struct message** memory, pthread_mutex_t* mutexes) {
     int ret = 0;
     /* Run server as daemon */
-    //init_daemon();
+    init_daemon();
 
     /* Create and initialize socket */
     if (connection_type == UDP_CON) {
@@ -128,26 +138,25 @@ int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* 
     return 0;
 }
 
+//---------------------------------------------------
+/* Main server routine, work and accept messages */
 int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, struct message* memory, \
                      pthread_mutex_t* mutexes, pthread_t* thread_ids, int* id_map) {
 
     struct message msg = {0};
+    int ret = 0;
     struct sockaddr_in client_data = {0};
     int client_sk = 0;
     int* pclient_sk = NULL;
 
     while (1) {
 
-        int ret = 0;
-        memset(&msg, '\0', sizeof(struct message));
+        memset(&msg, 0, sizeof(struct message));
         /* Get message from client */
         ret = get_msg(sk, sk_addr, &msg, &client_data, &client_sk, pclient_sk, connection_type);
         if (ret < 0) {
             return -1;
         }
-        LOG("Message reception successfull%s\n", "");
-        //print_info(&msg);
-
         ret = threads_distribute(connection_type, memory,
                                     &msg, thread_ids, id_map, client_sk, pclient_sk);
         if (ret < 0) {
@@ -325,7 +334,7 @@ int init_shell(int* pid) {
 
 
 
-void start_shell(char* buf, char* input, char* cwd) {
+int start_shell(char* buf, char* input, char* cwd) {
     LOG("Starting shell on server%s\n", "");
     int ret = 0;
 
@@ -386,7 +395,7 @@ void start_shell(char* buf, char* input, char* cwd) {
     if (ret != cmd_len) {
         LOG("Error writing to fd: %s\n", strerror(errno));
         ERROR(errno);
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     /* Check whether all data has been written with poll */
@@ -405,7 +414,7 @@ void start_shell(char* buf, char* input, char* cwd) {
             ret = read(fd, buf, BUFSIZ);
             if (ret < 0) {
                 ERROR(errno);
-                exit(EXIT_FAILURE);
+                return -1;
             }
         }
 
@@ -414,7 +423,7 @@ void start_shell(char* buf, char* input, char* cwd) {
         LOG("Data read: %s\n", buf);
         if (ret < 0) {
             ERROR(errno);
-            exit(EXIT_FAILURE);
+            return -1;
         }
         
         if (offset + ret  < BUFSIZ) {
@@ -438,8 +447,9 @@ void start_shell(char* buf, char* input, char* cwd) {
     if (ret < 0) {
         LOG("Error terminating bash: %s\n", strerror(errno));
         ERROR(errno);
-        exit(EXIT_FAILURE);
+        return -1;
     }
+    return 0;
 }
 
 void init_daemon() {
@@ -576,7 +586,6 @@ int mutex_init(pthread_mutex_t* mutexes, int* id_map) {
 }
 
 
-
 void udp_init(struct sockaddr_in* sk_addr, in_addr_t addr) {
     sk_addr->sin_family = AF_INET;
     sk_addr->sin_port = htons(PORT); /* using here htons for network byte order conversion */
@@ -603,29 +612,24 @@ int threads_distribute(int connection_type, struct message* memory, struct messa
 
     if (connection_type == UDP_CON) {
         thread_memory = &memory[msg->id];
-        //print_info(msg);
-        //printf("thread_memory: %p\n", thread_memory);
-        //print_info(thread_memory);
         memcpy(thread_memory, msg, sizeof(struct message));
-        printf("Copying successful\n");
     }
 
     /* Check whether we need a new thread. Create one if needed */
     if (connection_type == UDP_CON) {
-
         int exists = lookup(id_map, MAXCLIENTS, msg->id);
         if (exists == 0) {
-            LOG("New client: %d\n", msg->id);
+            LOG("New client accepted: %d\n", msg->id);
             id_map[msg->id] = 1;
             /* Handing over this client to a new thread */
             ret = pthread_create(&thread_ids[msg->id], NULL, udp_handle_connection, thread_memory);
             if (ret < 0) {
                 LOG("Error creating thread: %s\n", strerror(errno));
                 ERROR(errno);
-                exit(EXIT_FAILURE);
+                return -1;
             }
         } else {
-            LOG("Old client: %d\n", msg->id);\
+            LOG("Old client accepted: %d\n", msg->id);
         }
         // ret = pthread_create(&thread_ids[client_sk], NULL, tcp_handle_connection, pclient_sk);
         // if (ret < 0) {
@@ -642,13 +646,19 @@ int threads_distribute(int connection_type, struct message* memory, struct messa
 
     /* Unlock mutex so client thread could access the memory */
     if (connection_type == UDP_CON) {
-        pthread_mutex_unlock(&mutexes[msg->id]);
+        ret = pthread_mutex_unlock(&mutexes[msg->id]);
+        if (ret < 0) {
+            LOG("Error unlocking mutex.%s\n", "");
+            return -1;
+        }
     }
     printf("\n\n\n");
 
     return 0;
 }
 
+//---------------------------------------------------
+/* Accept message from client and place it in msg buffer */
 int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data,
              int* client_sk, int* pclient_sk, int connection_type) {
     
@@ -694,7 +704,7 @@ int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct soc
 
     char* addr = inet_ntoa(client_data->sin_addr);
     if (addr == NULL) {
-        LOG("Client address invalid: %s\n", strerror(errno));
+        LOG("ERROR: Client address invalid: %s\n", strerror(errno));
     }
 
     LOG("Client address: %s\n", addr);
@@ -774,7 +784,7 @@ int reply_to_client(struct message* msg) {
     return 0;
 }
 
-void thread_routine(struct message*  msg, struct message* memory, char* dir, char* buf) {
+void thread_routine(struct message* msg, struct message* memory, char* dir, char* buf) {
     int ret = 0;
     while (1) {
         /* Copy data from memory */
@@ -884,7 +894,3 @@ void tcp_reply_to_client(int client_sk, struct message* msg) {
     LOG("Bytes sent to client: %d\n", ret);
     LOG("MESSAGE SENT%s\n", "");
 }
-
-// void connect_to_server(struct in_addr) {
-
-// }
