@@ -132,7 +132,10 @@ extern pthread_mutex_t mutexes[];
 int check_input(int argc, char** argv, int* connection_type);
 
 int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* id_map,
-                struct message* memory, pthread_mutex_t* mutexes);
+                struct message** memory, pthread_mutex_t* mutexes);
+
+int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, struct message* memory,
+        pthread_mutex_t* mutexes, pthread_t* thread_ids, int* id_map);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 
@@ -148,9 +151,19 @@ void init_daemon();
 
 int mutex_init(pthread_mutex_t* mutexes, int* id_map);
 
-int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type);
+int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data,
+             int* client_sk, int* pclient_sk, int connection_type);
 
-void* handle_connection(void* memory);
+int threads_distribute(int connection_type, struct message* memory, struct message* msg,
+                        pthread_t* thread_ids, int* id_map, int client_sk, int* pclient_sk);
+
+int print_client_addr(struct message* msg);
+
+int handle_message(struct message* msg, char* dir, char* buf);
+
+void thread_routine(struct message*  msg, struct message* memory, char* dir, char* buf);
+
+void* udp_handle_connection(void* memory);
 
 void* tcp_handle_connection(void* memory);
 
@@ -160,7 +173,7 @@ void terminate_server(int sk);
 
 void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
 
-void reply_to_client(struct message* msg);
+int reply_to_client(struct message* msg);
 
 void tcp_reply_to_client(int client_sk, struct message* msg);
 
