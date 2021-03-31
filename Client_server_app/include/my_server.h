@@ -134,8 +134,17 @@ int check_input(int argc, char** argv, int* connection_type);
 int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* id_map,
                 struct message** memory, pthread_mutex_t* mutexes);
 
+int client_init(int connection_type, int* sk, char* ip_addr, struct sockaddr_in* sk_addr,
+                struct sockaddr_in* sk_bind, struct sockaddr_in* sk_broad);
+
 int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, struct message* memory,
         pthread_mutex_t* mutexes, pthread_t* thread_ids, int* id_map);
+
+int client_routine(int connection_type, int sk, struct sockaddr_in* sk_addr,
+                                                struct sockaddr_in* sk_broad,
+                                                struct sockaddr_in* server_data);
+
+int parse_input(char* input, char* cmd, char* args);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 

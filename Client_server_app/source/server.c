@@ -35,10 +35,16 @@ int main(int argc, char** argv) {
     /* Prepare server for main routine */
     ret =  server_init(connection_type, &sk, &sk_addr, id_map, &memory, mutexes);
     if (ret < 0) {
+        printf("Error initializing server.\n");
         exit(EXIT_FAILURE);
     }
 
+    /* Server operation */
     ret = server_routine(connection_type, sk, &sk_addr, memory, mutexes, thread_ids, id_map);
+    if (ret < 0) {
+        printf("Error in server operation.\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

@@ -138,6 +138,234 @@ int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* 
     return 0;
 }
 
+int client_init(int connection_type, int* sk, char* ip_addr, struct sockaddr_in* sk_addr,
+                struct sockaddr_in* sk_bind, struct sockaddr_in* sk_broad) {
+    /* Init socket address and family */
+    in_addr_t ipin_addr = -1;
+    struct sockaddr_in server_data;
+    socklen_t addrlen = sizeof(server_data);
+    int ret = 0;
+
+    if (connection_type == UDP_CON) {
+        *sk = socket(AF_INET, SOCK_DGRAM, 0);
+    } else {
+        *sk = socket(AF_INET, SOCK_STREAM, 0);
+    }
+    if (*sk < 0) {
+        ERROR(errno);
+        return -1;
+    }
+
+    /* Initialize client address, either with loopback or with IP */
+    if (ip_addr == NULL) {
+        addr_init(sk_addr, INADDR_LOOPBACK);
+    } else {
+        ipin_addr = inet_addr(ip_addr);
+        if (ipin_addr < 0) {
+            printf("Error converting IP to valid address.\n");
+            return -1;
+        }
+        addr_init(sk_addr, ipin_addr);
+        struct in_addr addr;
+        ret = inet_pton(AF_INET, ip_addr, &addr);
+        if (ret != 1) {
+            printf("IP address is invalid\n");
+        }
+        sk_addr->sin_addr.s_addr = addr.s_addr;
+        printf("IP address of server assigned:%s\n", ip_addr);
+    }
+
+    /* Binding socket */
+    addr_init(sk_bind, INADDR_ANY);
+
+    /* Allowing broadcast */
+    int confirm = 1;
+    setsockopt(*sk, SOL_SOCKET, SO_BROADCAST, &confirm, sizeof(confirm));
+
+    addr_init(sk_broad, INADDR_BROADCAST);
+
+    /* Use connect if TCP enabled */
+    if (connection_type == TCP_CON) {
+        ret = connect(*sk, sk_addr, addrlen);
+        if (ret < 0) {
+            ERROR(errno);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int parse_input(char* input, char* cmd, char* args) {
+
+    int ret = 0;
+    int input_len = 0;
+    int cmd_len = 0;
+    int args_len = 0;
+
+    ret = get_input(input);
+    if (ret < 0) {
+        printf("Error in input.\n");
+        return -1;
+    }
+
+    input_len = strlen(input); // fix later
+
+    printf("Input: %s\n", input);
+    printf("Input length: %d\n", input_len);
+
+    ret = get_cmd(input, cmd);
+    if (ret < 0) {
+        printf("Error in parsing command.\n");
+        return -1;
+    }
+
+    cmd_len = strlen(cmd);
+    printf("Cmd: %s\n", cmd);
+    printf("Cmd length: %d\n", cmd_len);
+
+    ret = get_args(input, args);
+    if (ret < 0) {
+        printf("Error in parsing args.\n");
+        printf("No args provided.\n");
+    }
+
+    if (ret >= 0) {
+        args_len = strlen(args);
+        printf("Args: %s\n", args);
+        printf("Args length: %d\n", args_len);
+    }
+
+    return 0;
+}
+
+int construct_command(char* input, char* cmd, char* args, struct message* msg) {
+    int ret = 0;
+    ret = get_input(input);
+    if (ret < 0) {
+        printf("Error in input.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int input_len = 0;
+    int cmd_len = 0;
+    int args_len = 0;
+    input_len = strlen(input); // fix later
+
+    printf("Input: %s\n", input);
+    printf("Input length: %d\n", input_len);
+
+    ret = get_cmd(input, cmd);
+    if (ret < 0) {
+        printf("Error in parsing command.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    cmd_len = strlen(cmd);
+    printf("Cmd: %s\n", cmd);
+    printf("Cmd length: %d\n", cmd_len);
+
+    ret = get_args(input, args);
+    if (ret < 0) {
+        printf("Error in parsing args.\n");
+        printf("No args provided.\n");
+    }
+
+    if (ret >= 0) {
+        args_len = strlen(args);
+        printf("Args: %s\n", args);
+        printf("Args length: %d\n", args_len);
+    }
+
+    /* Exit client if command quit was specified */
+    if (strncmp(cmd, QUIT, QUIT_LEN) == 0) {
+        printf("Exiting client.\n");
+        return 0;
+    }
+
+    /* For now pid is identifier */
+    pid_t pid = getpid();
+    /* Sending message containing command, client identifier and arguments */
+
+    memset(msg, '\0', sizeof(struct message));
+    memcpy(msg->cmd, cmd, cmd_len);
+    memcpy(&(msg->id), &pid, sizeof(pid_t));
+    memcpy(msg->data, args, args_len);
+    return 0;
+}
+
+int client_routine(int connection_type, int sk,
+                                                struct sockaddr_in* sk_addr,
+                                                struct sockaddr_in* sk_broad,
+                                                struct sockaddr_in* server_data) {
+    int ret = 0;
+    socklen_t addrlen = sizeof(*server_data);
+
+    while(1) {
+
+        char input[BUFSIZ];
+        char cmd[CMDSIZE];
+        char args[MSGSIZE];
+
+        memset(input, 0, BUFSIZ);
+        memset(cmd, 0, CMDSIZE);
+        memset(args, 0, MSGSIZE);
+
+        struct message msg;
+
+
+        ret = construct_command(input, cmd, args, &msg);
+
+        printf("Message to be sent:\n");
+        printf("ID: %d\n", msg.id);
+        printf("Command: %s\n", msg.cmd);
+        printf("Data: %s\n", msg.data);
+        printf("Sending command\n");
+
+        /* Send broadcast message */
+        // if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
+        //     if (connection_type == TCP_CON) {
+        //         printf("Unicast only in TCP.\n");
+        //         printf("Enter another command");
+        //     } else {
+        //         ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
+        //     }
+        // } else {
+            /* Send other message either with send or send_message depending on the protocol */
+            if (connection_type == UDP_CON) {
+                ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
+            }
+            printf("Bytes sent: %d\n\n\n", ret);
+            
+            /* Receive reply from server */
+            if (connection_type == UDP_CON) {
+                ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
+            } //else {
+            //     while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
+            //         printf("Bytes received: %d\n", ret);
+            //     }
+            // }
+            printf("Bytes received: %d\n", ret);
+            if (ret < 0) {
+                ERROR(errno);
+                close(sk);
+                return -1;
+            }
+            
+            if (ret != sizeof(struct message)) {
+                printf("Error receiving message in client\n");
+                close(sk);
+                return -1;
+            }
+
+            printf("Message received:\n");
+            printf("ID: %d\n", msg.id);
+            printf("Command: %s\n", msg.cmd);
+            printf("Data: %s\n", msg.data);
+       // }
+    }
+    close(sk);
+}
+
 //---------------------------------------------------
 /* Main server routine, work and accept messages */
 int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, struct message* memory, \
@@ -162,7 +390,6 @@ int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, str
         if (ret < 0) {
             return -1;
         }
-        // примечание: если файл (или сокет) удалили с файловой системы, им еще могут пользоваться программы которые не закрыли его до закрытия
     }
     return 0;
 }
@@ -334,6 +561,8 @@ int init_shell(int* pid) {
 
 
 
+//---------------------------------------------------
+/* Initialize bash shell on server */
 int start_shell(char* buf, char* input, char* cwd) {
     LOG("Starting shell on server%s\n", "");
     int ret = 0;
@@ -452,6 +681,8 @@ int start_shell(char* buf, char* input, char* cwd) {
     return 0;
 }
 
+//---------------------------------------------------
+/* Initialize server in daemon mode */
 void init_daemon() {
 
     /* process of initialization of daemon */   
@@ -604,6 +835,8 @@ void broad_init(struct sockaddr_in* sk_addr) {
     sk_addr->sin_addr.s_addr = htonl(INADDR_BROADCAST);
 }
 
+//---------------------------------------------------
+/* Handle clients to corresponding threads */
 int threads_distribute(int connection_type, struct message* memory, struct message* msg,
                         pthread_t* thread_ids, int* id_map, int client_sk, int* pclient_sk) {
     /* Access the corresponding location in memory */
@@ -631,13 +864,14 @@ int threads_distribute(int connection_type, struct message* memory, struct messa
         } else {
             LOG("Old client accepted: %d\n", msg->id);
         }
-        // ret = pthread_create(&thread_ids[client_sk], NULL, tcp_handle_connection, pclient_sk);
-        // if (ret < 0) {
-        //     LOG("Error creating thread: %s\n", strerror(errno));
-        //     ERROR(errno);
-        //     exit(EXIT_FAILURE);
-        // }
-    }   
+    } else {
+        ret = pthread_create(&thread_ids[client_sk], NULL, tcp_handle_connection, pclient_sk);
+        if (ret < 0) {
+            LOG("Error creating thread: %s\n", strerror(errno));
+            ERROR(errno);
+            exit(EXIT_FAILURE);
+        }
+    }
     /* Transfer data to corresponding client's memory cell */
     if (connection_type == UDP_CON) {
         thread_memory = &memory[msg->id];
@@ -784,16 +1018,18 @@ int reply_to_client(struct message* msg) {
     return 0;
 }
 
+//---------------------------------------------------
+/* Function handling accepting messages in thread and handing them over to corresponding threads */
 void thread_routine(struct message* msg, struct message* memory, char* dir, char* buf) {
     int ret = 0;
     while (1) {
         /* Copy data from memory */
-        memcpy(&msg, memory, sizeof(struct message));
+        memcpy(msg, memory, sizeof(struct message));
         /* Lock mutex */
         LOG("Waiting for mutex to be unlocked%s\n", "");
         LOG("Mutex unlocked%s\n", "");
         pthread_mutex_lock(&mutexes[msg->id]);
-        memcpy(&msg, memory, sizeof(struct message));
+        memcpy(msg, memory, sizeof(struct message));
 
         print_info(msg);
         ret = print_client_addr(msg);
