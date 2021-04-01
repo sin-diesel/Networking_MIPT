@@ -66,19 +66,27 @@ int handle_message(struct message* msg, char* dir, char* buf) {
         LOG("Cwd: %s\n", dir);
         memcpy((void*) dir, msg->data, MSGSIZE);
         LOG("Changing cwd to %s\n", msg->data);
+        return 0;
 
-    } else if (strncmp(msg->cmd, SHELL, SHELL_LEN) == 0) {
-        LOG("Message data to be executed in shell:%s\n", msg->data);
-        /* Send cwd so shell knows where to execute command */
-        ret = start_shell(buf, msg->data, dir);
-        if (ret < 0) {
-            LOG("Errors starting shell.%s\n", "");
-            return -1;
+    // } else if (strncmp(msg->cmd, SHELL, SHELL_LEN) == 0) {
+    //     /* Send cwd so shell knows where to execute command */
+    //     /* Continiously execute commands until client terminates shell */
+    //     LOG("Initializing shell:%s\n", "");
+    //     *fd = shell_init();
+    //     if (*fd < 0) {
+    //         ERROR(errno);
+    //         return -1;
+    //     }
+    } else {
+        ret = shell_execute(buf, msg, dir);
+            if (ret < 0) {
+                LOG("Errors executing cmd in shell.%s\n", "");
+                return -1;
+            }
+            /* Copy data from shell return buf to msg */
+            memcpy(msg->data, buf, MSGSIZE);
+            LOG("Data ready to be sent to client: %s\n", msg->data);
         }
-        /* Copy data from shell return buf to msg */
-        memcpy(msg->data, buf, MSGSIZE);
-        LOG("Data ready to be sent to client: %s\n", msg->data);
-    } 
     return 0;
 }
 
@@ -483,7 +491,10 @@ int lookup(int* id_map, int n_ids, pid_t id) {
     return 0;
 }
 
-int init_shell(int* pid) {
+//---------------------------------------------------
+/* Initialize bash shell settings on server, return fd of bash
+    terminal descriptor */
+int shell_init(int* pid) {
     int ret = 0;
     int fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
     if (fd < 0) {
@@ -559,28 +570,55 @@ int init_shell(int* pid) {
     return fd;
 }
 
+int shell_cmd(struct message*  msg, char* input) {
+    int cmd_len = strlen(msg->cmd);
+    int data_len = strlen(msg->data);
+
+    memset(input, '\0', BUFSIZ);
+    memcpy(input, msg->cmd, cmd_len);
+    input[cmd_len] = ' ';
+    memcpy(input + cmd_len + 1, msg->data, data_len);
+
+    LOG("Output from shell_cmd:%s\n", input);
+    return 0;
+}
+
 
 
 //---------------------------------------------------
-/* Initialize bash shell on server */
-int start_shell(char* buf, char* input, char* cwd) {
-    LOG("Starting shell on server%s\n", "");
-    int ret = 0;
-
-    pid_t pid;
-    int fd = init_shell(&pid);
+/* Start shell, continiously read command from client and execute it */
+int shell_execute(char* buf, struct message* msg, char* cwd) {
 
     char input_copy[BUFSIZ];
+    int ret = 0;
+    int cmd_len;
+    char cmd[CMDSIZE];
+    char args[MSGSIZE];
+    char new_input[BUFSIZ];
+    char input[BUFSIZ];
+
+
+    pid_t pid;
+    int fd = shell_init(&pid);
+
+    /* Construct input from command field and arguments field in msg */
+    ret = shell_cmd(msg, input);
+    if (ret < 0) {
+        LOG("Error constructing input from msg%s\n", "");
+        return -1;
+    }
+
+    LOG("Current client directory: %s\n", cwd);
+    LOG("Executing shell command on server%s\n", "");
+    LOG("Input: %s\n", input);
     /* Copying buffer */
     strcpy(input_copy, input);
 
-    /* Add \n to the end of command assuming we have enough space */
-    int cmd_len = strlen(input);
+    cmd_len = strlen(input);
 
     /* Get cmd and args */
-    char cmd[CMDSIZE];
-    char args[MSGSIZE];
 
+    /* Get cmd from command field of message */
     ret = get_cmd(input, cmd);
     if (ret < 0) {
         LOG("Error parsing command.%s\n", "");
@@ -592,7 +630,6 @@ int start_shell(char* buf, char* input, char* cwd) {
     }
 
     LOG("Cmd: %s\n", cmd);
-
     LOG("Args: %s\n", args);
 
     /* Change directory if cd */
@@ -607,7 +644,6 @@ int start_shell(char* buf, char* input, char* cwd) {
     /* Writing command */
     /* Manually construct ls command with cwd,
         if we do not need to construct manually, simply copy old input to new input */
-    char new_input[BUFSIZ];
     /* Copy back to main buffer. If input has not been changed, than everything
         is ok */
     strncpy(new_input, input, BUFSIZ);
@@ -638,7 +674,6 @@ int start_shell(char* buf, char* input, char* cwd) {
     int offset = 0;
 
     while ((ret = poll(&pollfds, 1, wait_ms)) != 0) {
-
         if (pollfds.revents == POLLIN) {
             ret = read(fd, buf, BUFSIZ);
             if (ret < 0) {
@@ -646,7 +681,6 @@ int start_shell(char* buf, char* input, char* cwd) {
                 return -1;
             }
         }
-
         LOG("Bytes read: %d\n", ret);
         buf[ret] = '\0';
         LOG("Data read: %s\n", buf);
@@ -1022,6 +1056,9 @@ int reply_to_client(struct message* msg) {
 /* Function handling accepting messages in thread and handing them over to corresponding threads */
 void thread_routine(struct message* msg, struct message* memory, char* dir, char* buf) {
     int ret = 0;
+    /* Descriptor for shell */
+    //int fd = -1;
+
     while (1) {
         /* Copy data from memory */
         memcpy(msg, memory, sizeof(struct message));
@@ -1038,7 +1075,7 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
         }
 
         /* Handle client's command */
-        ret = handle_message(msg, buf, dir);
+        ret = handle_message(msg, dir, buf);
         if (ret < 0) {
             exit(EXIT_FAILURE);
         }

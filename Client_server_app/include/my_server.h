@@ -152,9 +152,9 @@ int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
 
-int init_shell(int* pid);
+int shell_init(int* pid);
 
-int start_shell(char* buf, char* input, char* cwd);
+int shell_execute(char* buf, struct message* msg, char* cwd);
 
 void init_daemon();
 
