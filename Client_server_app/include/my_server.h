@@ -148,11 +148,15 @@ int parse_input(char* input, char* cmd, char* args);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
 
+int handle_reply(struct message* msg, struct sockaddr_in* server_data);
+
 int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
 
 int shell_init(int* pid);
+
+int check_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
 
 int shell_execute(char* buf, struct message* msg, char* cwd);
 

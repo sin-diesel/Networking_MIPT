@@ -19,7 +19,6 @@
 
 /* Print message info */
 void print_info(struct message* msg) {
-    LOG("Message received: %s\n", "");
     LOG("ID: %d\n", msg->id);
     LOG("Command: %s\n", msg->cmd);
     LOG("Data: %s\n", msg->data);
@@ -296,6 +295,29 @@ int construct_command(char* input, char* cmd, char* args, struct message* msg) {
     return 0;
 }
 
+int handle_reply(struct message* msg, struct sockaddr_in* server_data) {
+
+    int ret = 0;
+    printf("Message received:\n");
+    printf("ID: %d\n", msg->id);
+    printf("Command: %s\n", msg->cmd);
+    printf("Data: %s\n", msg->data);
+
+    if (strncmp(msg->cmd, EXIT, EXIT_LEN) == 0) {
+        printf("Terminating session.\n");
+        exit(EXIT_SUCCESS);
+    } else if (strncmp(msg->cmd, BROAD, BROAD_LEN) == 0) {
+        printf("Broadcast reply received:\n");
+        char* addr = inet_ntoa(server_data->sin_addr);
+        if (addr == NULL) {
+            printf("Server address invalid\n");
+        }
+        printf("Server address received from broadcast: %s\n", addr);
+        printf("Bytes received: %d\n", ret);
+    }
+    return 0;
+}
+
 int client_routine(int connection_type, int sk,
                                                 struct sockaddr_in* sk_addr,
                                                 struct sockaddr_in* sk_broad,
@@ -312,9 +334,7 @@ int client_routine(int connection_type, int sk,
         memset(input, 0, BUFSIZ);
         memset(cmd, 0, CMDSIZE);
         memset(args, 0, MSGSIZE);
-
         struct message msg;
-
 
         ret = construct_command(input, cmd, args, &msg);
 
@@ -324,49 +344,39 @@ int client_routine(int connection_type, int sk,
         printf("Data: %s\n", msg.data);
         printf("Sending command\n");
 
-        /* Send broadcast message */
-        // if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
-        //     if (connection_type == TCP_CON) {
-        //         printf("Unicast only in TCP.\n");
-        //         printf("Enter another command");
-        //     } else {
-        //         ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
-        //     }
-        // } else {
-
-        ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
-        printf("Bytes sent: %d\n\n\n", ret);
-
-        if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
-            printf("Terminating session.\n");
-            exit(EXIT_SUCCESS);
+        if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
+            ret = send_message(sk, &msg, sizeof(struct message), sk_broad);
+        } else {    
+            ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
         }
+        printf("Bytes sent: %d\n\n\n", ret);
             
-            /* Receive reply from server */
-            if (connection_type == UDP_CON) {
-                ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
-            } //else {
-            //     while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
-            //         printf("Bytes received: %d\n", ret);
-            //     }
-            // }
-            printf("Bytes received: %d\n", ret);
-            if (ret < 0) {
-                ERROR(errno);
-                close(sk);
-                return -1;
-            }
-            
-            if (ret != sizeof(struct message)) {
-                printf("Error receiving message in client\n");
-                close(sk);
-                return -1;
-            }
+        /* Receive reply from server */
+        if (connection_type == UDP_CON) {
+            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
+        } //else {
+        //     while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
+        //         printf("Bytes received: %d\n", ret);
+        //     }
+        // }
+        printf("Bytes received: %d\n", ret);
+        if (ret < 0) {
+            ERROR(errno);
+            close(sk);
+            return -1;
+        }
+        
+        if (ret != sizeof(struct message)) {
+            printf("Error receiving message in client\n");
+            close(sk);
+            return -1;
+        }
 
-            printf("Message received:\n");
-            printf("ID: %d\n", msg.id);
-            printf("Command: %s\n", msg.cmd);
-            printf("Data: %s\n", msg.data);
+        ret = handle_reply(&msg, server_data);
+        if (ret < 0 ) {
+            printf("Error analyzing contents of a message.\n");
+            return -1;
+        }
        // }
     }
     close(sk);
@@ -391,6 +401,19 @@ int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, str
         if (ret < 0) {
             return -1;
         }
+
+        /* Handle broadcast message */
+        ret = check_broadcast(sk, &msg, &client_data);
+
+        if (ret == 1) {
+            continue;
+        }
+
+        if (ret < 0) {
+            LOG("Error in checking broadcast message.%s\n", "");
+            exit(EXIT_FAILURE);
+        }
+    
         ret = threads_distribute(connection_type, memory,
                                     &msg, thread_ids, id_map, client_sk, pclient_sk);
         if (ret < 0) {
@@ -797,6 +820,30 @@ void broad_init(struct sockaddr_in* sk_addr) {
     sk_addr->sin_family = AF_INET;
     sk_addr->sin_port = htons(PORT); /* using here htons for network byte order conversion */
     sk_addr->sin_addr.s_addr = htonl(INADDR_BROADCAST);
+}
+
+//---------------------------------------------------
+/* Check whether we have a broadcast message on server, return 1 if 
+    broadcast option was passed, 0 if not, -1 on checking error */
+int check_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data) {
+
+    int ret = 0;
+    if (strncmp(msg->cmd, BROAD, BROAD_LEN) == 0) {
+        LOG("Broadcasting server IP%s\n", "");
+        char reply[] = "Broadcast reply";
+        memcpy(msg->data, reply, sizeof(reply));
+
+        ret = sendto(sk, msg, sizeof(struct message), 0,           \
+                (struct sockaddr*) client_data, sizeof(struct sockaddr_in));
+        if (ret < 0) {
+            LOG("Error sending message to client: %s\n", strerror(errno));
+            ERROR(errno);
+            return -1;
+        }
+        return 1;
+    }
+
+    return 0;
 }
 
 //---------------------------------------------------
