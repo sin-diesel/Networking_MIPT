@@ -495,7 +495,9 @@ int lookup(int* id_map, int n_ids, pid_t id) {
 /* Initialize bash shell settings on server, return fd of bash
     terminal descriptor */
 int shell_init(int* pid) {
+    
     int ret = 0;
+
     int fd = open("/dev/ptmx", O_RDWR | O_NOCTTY);
     if (fd < 0) {
         LOG("Error opening /dev/ptmx: %s\n", strerror(errno));
@@ -596,7 +598,6 @@ int shell_execute(char* buf, struct message* msg, char* cwd) {
     char args[MSGSIZE];
     char new_input[BUFSIZ];
     char input[BUFSIZ];
-
 
     pid_t pid;
     int fd = shell_init(&pid);

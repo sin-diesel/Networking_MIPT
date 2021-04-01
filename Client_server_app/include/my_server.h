@@ -65,7 +65,7 @@ static const char log_path[] = "/var/log/server.log";
 #define QUIT "quit"
 
 /* Command and message size */
-#define CMDSIZE 32
+#define CMDSIZE 512
 #define MSGSIZE 1024
 
 /* Max path that can be sent via cd command */
