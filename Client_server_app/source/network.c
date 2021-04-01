@@ -62,30 +62,25 @@ int print_client_addr(struct message* msg) {
 int handle_message(struct message* msg, char* dir, char* buf) {
     int ret = 0;
 
+    /* Manually change directory if command is cd */
     if (strncmp(msg->cmd, CD, CD_LEN) == 0) {
         LOG("Cwd: %s\n", dir);
         memcpy((void*) dir, msg->data, MSGSIZE);
         LOG("Changing cwd to %s\n", msg->data);
         return 0;
-
-    // } else if (strncmp(msg->cmd, SHELL, SHELL_LEN) == 0) {
-    //     /* Send cwd so shell knows where to execute command */
-    //     /* Continiously execute commands until client terminates shell */
-    //     LOG("Initializing shell:%s\n", "");
-    //     *fd = shell_init();
-    //     if (*fd < 0) {
-    //         ERROR(errno);
-    //         return -1;
-    //     }
+    } else if (strncmp(msg->cmd, EXIT, EXIT_LEN) == 0) {
+    /* Quit server */
+        terminate_server();
     } else {
+    /* Otherwise start shell and execute command */
         ret = shell_execute(buf, msg, dir);
-            if (ret < 0) {
-                LOG("Errors executing cmd in shell.%s\n", "");
-                return -1;
-            }
-            /* Copy data from shell return buf to msg */
-            memcpy(msg->data, buf, MSGSIZE);
-            LOG("Data ready to be sent to client: %s\n", msg->data);
+        if (ret < 0) {
+            LOG("Errors executing cmd in shell.%s\n", "");
+            return -1;
+        }
+        /* Copy data from shell return buf to msg */
+        memcpy(msg->data, buf, MSGSIZE);
+        LOG("Data ready to be sent to client: %s\n", msg->data);
         }
     return 0;
 }
@@ -338,11 +333,14 @@ int client_routine(int connection_type, int sk,
         //         ask_broadcast(sk, &msg, &sk_broad, &server_data, &addrlen);
         //     }
         // } else {
-            /* Send other message either with send or send_message depending on the protocol */
-            if (connection_type == UDP_CON) {
-                ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
-            }
-            printf("Bytes sent: %d\n\n\n", ret);
+
+        ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
+        printf("Bytes sent: %d\n\n\n", ret);
+
+        if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
+            printf("Terminating session.\n");
+            exit(EXIT_SUCCESS);
+        }
             
             /* Receive reply from server */
             if (connection_type == UDP_CON) {
@@ -401,85 +399,15 @@ int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, str
     }
     return 0;
 }
-    // struct message msg = {};
-    // int client_sk = 0;
-    // int* pclient_sk = NULL;
-    // int ret = 0;
-    
-    // while (1) {
-    //     memset(&msg, '\0', sizeof(struct message));
 
-    //     /* Get message from client */
-    //     if (connection_type == UDP_CON) {
-    //         ret = get_msg(sk, sk_addr, &msg, client_data, client_sk, pclient_sk, connection_type);
-    //         if (ret < 0) {
-    //             LOG("Error getting message from client%s\n", "");
-    //             return -1;
-    //         }
-            
-    //     }
-
-    //     if (connection_type == TCP_CON) {
-    //     /* Accept client connections */
-    //         client_sk = accept(sk, NULL, NULL);
-    //         if (client_sk < 0) {
-    //             ERROR(errno);
-    //             return -1;
-    //         }
-
-    //         pclient_sk = (int*) calloc(1, sizeof(int));
-    //         if (pclient_sk == NULL) {
-    //             LOG("Error allocating memory for client_sk%s\n", "");
-    //             return -1;
-    //         }
-    //         *pclient_sk = client_sk;
-
-    //         LOG("Client sk assigned: %d\n", client_sk);
-    //     }
-
-    //     /* Decide which message was sent, handle exit and broadcast */
-    //     if (strncmp(msg.cmd, EXIT, EXIT_LEN) == 0) {
-    //         /* Closing server */
-    //         terminate_server(sk);
-    //     }
-
-    //     /* Access the corresponding location in memory */
-    //     if (connection_type == UDP_CON) {
-    //         thread_memory = &memory[msg.id];
-    //         memcpy(thread_memory, &msg, sizeof(struct message));
-    //     }
-
-    //     /* Check whether we need a new thread. Create one if needed */
-    //     if (connection_type == UDP_CON) {
-    //         check_thread(thread_ids, thread_memory, id_map, &msg, handle_connection);
-    //     } else {
-    //         ret = pthread_create(&thread_ids[client_sk], NULL, tcp_handle_connection, pclient_sk);
-    //         if (ret < 0) {
-    //             LOG("Error creating thread: %s\n", strerror(errno));
-    //             ERROR(errno);
-    //             exit(EXIT_FAILURE);
-    //         }
-    //     }   
-    //     /* Transfer data to corresponding client's memory cell */
-    //     if (connection_type == UDP_CON) {
-    //         thread_memory = &memory[msg.id];
-    //         memcpy(thread_memory, &msg, sizeof(struct message));
-    //     }
-
-    //     /* Unlock mutex so client thread could access the memory */
-    //     if (connection_type == UDP_CON) {
-    //         pthread_mutex_unlock(&mutexes[msg.id]);
-    //     }
-    //     printf("\n\n\n");
-    //     // примечание: если файл (или сокет) удалили с файловой системы, им еще могут пользоваться программы которые не закрыли его до закрытия
-    // }
-
+//---------------------------------------------------
+/* Send message and handle errors, return number of bytes successfully sent */
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr) {
     int ret = sendto(sk, msg, msg_len, 0, (struct sockaddr*) sk_addr, sizeof(*sk_addr));
     if (ret < 0) {
         LOG("Error sending to client: %s\n", strerror(errno));
         ERROR(errno);
-        exit(EXIT_FAILURE);
+        return -1;
     }
     return ret;
 }
@@ -600,6 +528,7 @@ int shell_execute(char* buf, struct message* msg, char* cwd) {
     char input[BUFSIZ];
 
     pid_t pid;
+    /* Initialize shell */
     int fd = shell_init(&pid);
 
     /* Construct input from command field and arguments field in msg */
@@ -1001,10 +930,8 @@ void check_thread(pthread_t* thread_ids, struct message* thread_memory, int* id_
     }
 }
 
-void terminate_server(int sk) {
+void terminate_server() {
     LOG("Closing server%s", "");
-    close(sk);
-    unlink(PATH);
     exit(EXIT_SUCCESS);
 }
 
@@ -1024,6 +951,8 @@ void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data
     }
 }
 
+//---------------------------------------------------
+/* Reply to client's message */
 int reply_to_client(struct message* msg) {
     int ret = 0;
     int sk = socket(AF_INET, SOCK_DGRAM, 0);
@@ -1057,8 +986,6 @@ int reply_to_client(struct message* msg) {
 /* Function handling accepting messages in thread and handing them over to corresponding threads */
 void thread_routine(struct message* msg, struct message* memory, char* dir, char* buf) {
     int ret = 0;
-    /* Descriptor for shell */
-    //int fd = -1;
 
     while (1) {
         /* Copy data from memory */
@@ -1066,11 +993,12 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
         /* Lock mutex */
         LOG("Waiting for mutex to be unlocked%s\n", "");
         LOG("Mutex unlocked%s\n", "");
+
         pthread_mutex_lock(&mutexes[msg->id]);
         memcpy(msg, memory, sizeof(struct message));
-
         print_info(msg);
         ret = print_client_addr(msg);
+
         if (ret < 0) {
             LOG("Client address invalid %s\n", "");
         }

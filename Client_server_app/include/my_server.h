@@ -178,7 +178,7 @@ void* tcp_handle_connection(void* memory);
 
 void check_thread(pthread_t* thread_ids, struct message* thread_memory, int* id_map, struct message* msg, void* handle_connection);
 
-void terminate_server(int sk);
+void terminate_server();
 
 void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
 
