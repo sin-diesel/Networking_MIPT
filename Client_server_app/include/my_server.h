@@ -78,7 +78,7 @@ static const char log_path[] = "/var/log/server.log";
 struct message {    
     int id;
     char cmd[CMDSIZE];
-    char data[MSGSIZE];
+    char data[MSGSIZE]; 
     struct sockaddr_in client_data;
     /* For tcp */
     int client_sk;
@@ -188,7 +188,7 @@ void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data
 
 int reply_to_client(struct message* msg);
 
-void tcp_reply_to_client(int client_sk, struct message* msg);
+int tcp_reply_to_client(int client_sk, struct message* msg);
 
 void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, \
                      struct sockaddr_in* server_data, socklen_t* addrlen); 

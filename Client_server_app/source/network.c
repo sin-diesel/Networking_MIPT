@@ -199,8 +199,7 @@ int client_init(int connection_type, int* sk, char* ip_addr, struct sockaddr_in*
 
 int parse_input(char* input, char* cmd, char* args) {
 
-    int ret = 0;
-    int input_len = 0;
+    int ret = 0, input_len = 0;
     int cmd_len = 0;
     int args_len = 0;
 
@@ -343,22 +342,24 @@ int client_routine(int connection_type, int sk,
         printf("Command: %s\n", msg.cmd);
         printf("Data: %s\n", msg.data);
         printf("Sending command\n");
-
+// ENUM 
         if (strncmp(msg.cmd, BROAD, BROAD_LEN) == 0) {
             ret = send_message(sk, &msg, sizeof(struct message), sk_broad);
         } else {    
-            ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
+            if (connection_type == UDP_CON) {
+                ret = send_message(sk, &msg, sizeof(struct message), sk_addr);
+            } else {
+                ret = send(sk, &msg, sizeof(struct message), 0);
+            }
         }
         printf("Bytes sent: %d\n\n\n", ret);
             
         /* Receive reply from server */
-        if (connection_type == UDP_CON) {
-            ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
-        } //else {
-        //     while ((ret = read(sk, &msg, sizeof(struct message))) != sizeof(struct message)) {
-        //         printf("Bytes received: %d\n", ret);
-        //     }
-        // }
+        //if (connection_type == UDP_CON) {
+        ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
+        //ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
+        //ret = recvfrom(sk, &msg, sizeof(struct message), 0, (struct sockaddr*) server_data, &addrlen);
+
         printf("Bytes received: %d\n", ret);
         if (ret < 0) {
             ERROR(errno);
@@ -1126,7 +1127,7 @@ void construct_input(char* cmd, char* new_input, char* cwd) {
     }
 }
 
-void tcp_reply_to_client(int client_sk, struct message* msg) {
+int tcp_reply_to_client(int client_sk, struct message* msg) {
     int ret = 0;
     LOG("SENDING MESSAGE BACK TO CLIENT%s\n", "");
     /* Print info */
@@ -1138,8 +1139,9 @@ void tcp_reply_to_client(int client_sk, struct message* msg) {
     if (ret < 0) {
         LOG("Error sending message: %s\n", strerror(errno));
         ERROR(errno);
-        exit(EXIT_FAILURE);
+        return -1;
     }
     LOG("Bytes sent to client: %d\n", ret);
     LOG("MESSAGE SENT%s\n", "");
+    return 0;
 }
