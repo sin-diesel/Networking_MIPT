@@ -75,3 +75,10 @@ gcc -c - Wall - Werror m16.c -o m16.o
 gcc -shared -o lib16.so m16.o
 
 __attribute__ is executed when loaded into memory
+
+
+
+Changes:
+1) Added extern
+2) -L $(pwd) - здесь надо искать библиотеки
+3) 

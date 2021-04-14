@@ -5,12 +5,6 @@
 #include <errno.h>
 #include "field.h"
 
-static struct field* loaded = NULL;
-int register_field(struct field* f) {
-	loaded = f;
-	return 0;
-};
-
 int main(int argc, char** argv) {
 
 	int res = 0;
@@ -23,12 +17,11 @@ int main(int argc, char** argv) {
 		printf("%s\n", error);
 		return -1;
 	}
-
-	loaded->m = 16;
-	for (int i = 0; i < 1; ++i) {
-		res = loaded->sum(12345678, 837421);
-		printf("Result: %d", res);
+	for (int i = 0; i < 100000000; ++i) {
+		res = sum(16, 12345678, 837421);
+		//printf("Result: %d", res);
 	}
+	printf("Result: %d", res);
 
 }
 
