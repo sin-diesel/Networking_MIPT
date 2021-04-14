@@ -1,0 +1,84 @@
+#define pr(error) printf(error); \
+				  exit(1);
+
+//better
+do {
+	printf(error);
+	exit(1);
+} while (0) // no dot 
+
+if (a > 0) 
+	printf(error);
+	exit(1); // BOOM
+
+
+ternary operator - careful
+
+пример
+Операционная система, файловая система
+
+
+Multiple file systems
+
+userspace (open, read...) => abstraction => filesystem (ext4, fat32, ...)
+
+
+ext_4_open, fat32_open... different functions
+
+How to do
+
+struct fs {
+	char* name
+	int type;
+	struct fops ops;
+}
+
+struct fops {
+	int (*open)(char* path, int mode, int r)
+	int (*read)(int fd, void* buf, size_t sz)
+	...
+}
+
+static int fat32_open() {
+	
+}
+
+static int fat32_read() {
+	
+}
+
+struct fops fat32ops = {
+	*open = &fat32_open;
+	*read = &fat32_read;
+
+}
+
+struct file {
+	file.fs.fops.read();
+}
+
+assignment
+
+struct field {
+	int m;
+	int (*sum) (int a, int b);
+	int (*set_m) (int m);
+	int (*get_m) (int m);
+}
+
+
+2 поля
+1 поле с m = 2, второе - произвольное
+
+
+gcc -c - Wall - Werror m16.c -o m16.o
+gcc -shared -o lib16.so m16.o
+
+__attribute__ is executed when loaded into memory
+
+
+
+Changes:
+1) Added extern
+2) -L $(pwd) - здесь надо искать библиотеки
+3) 

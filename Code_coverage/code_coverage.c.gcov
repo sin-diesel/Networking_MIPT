@@ -1,0 +1,36 @@
+        -:    0:Source:code_coverage.c
+        -:    0:Graph:code_coverage.gcno
+        -:    0:Data:code_coverage.gcda
+        -:    0:Runs:2
+        -:    0:Source is newer than graph
+        -:    1:
+        -:    2:#include <stdlib.h>
+        -:    3:#include <time.h>
+        -:    4:
+   998956:    5:static size_t foo1(size_t a, size_t b) {
+   998956:    6:	return a + b;
+        -:    7:}
+        -:    8:
+  1001044:    9:static size_t foo2(size_t a, size_t b) {
+  1001044:   10:	return a * b;
+        -:   11:}
+        -:   12:
+        -:   13:
+        -:   14:
+        2:   15:int main() {
+        -:   16:
+        -:   17:	int i, a, b;
+        -:   18:
+        2:   19:	srand(time(NULL));
+        -:   20:
+  2000002:   21:	for (i = 0; i < 1000000; ++i) {
+  2000000:   22:		a = rand();
+  2000000:   23:		b = rand();
+  2000000:   24:		if (a > b) {
+   998956:   25:			foo1(a, b);
+        -:   26:		} else {
+  1001044:   27:			foo2(a, b);
+        -:   28:		}
+        -:   29:	}		
+        2:   30:	return 0;
+        -:   31:}

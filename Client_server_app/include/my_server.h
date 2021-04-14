@@ -65,7 +65,7 @@ static const char log_path[] = "/var/log/server.log";
 #define QUIT "quit"
 
 /* Command and message size */
-#define CMDSIZE 32
+#define CMDSIZE 512
 #define MSGSIZE 1024
 
 /* Max path that can be sent via cd command */
@@ -78,7 +78,7 @@ static const char log_path[] = "/var/log/server.log";
 struct message {    
     int id;
     char cmd[CMDSIZE];
-    char data[MSGSIZE];
+    char data[MSGSIZE]; 
     struct sockaddr_in client_data;
     /* For tcp */
     int client_sk;
@@ -87,6 +87,7 @@ struct message {
 enum connection_type {
     UDP_CON = 0,
     TCP_CON,
+    NONE
 };
 
 /* Types of commands that can be sent to our server */
@@ -128,37 +129,66 @@ enum cmd_len {
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
 
-int check_input(int argc, char** argv, char** command, char** arg);
+int check_input(int argc, char** argv, int* connection_type);
+
+int server_init(int connection_type, int* sk, struct sockaddr_in* sk_addr, int* id_map,
+                struct message** memory, pthread_mutex_t* mutexes);
+
+int client_init(int connection_type, int* sk, char* ip_addr, struct sockaddr_in* sk_addr,
+                struct sockaddr_in* sk_bind, struct sockaddr_in* sk_broad);
+
+int server_routine(int connection_type, int sk, struct sockaddr_in* sk_addr, struct message* memory,
+        pthread_mutex_t* mutexes, pthread_t* thread_ids, int* id_map);
+
+int client_routine(int connection_type, int sk, struct sockaddr_in* sk_addr,
+                                                struct sockaddr_in* sk_broad,
+                                                struct sockaddr_in* server_data);
+
+int parse_input(char* input, char* cmd, char* args);
 
 int send_message(int sk, struct message* msg, int msg_len, struct sockaddr_in* sk_addr);
+
+int handle_reply(struct message* msg, struct sockaddr_in* server_data);
 
 int lookup(int* id_map, int n_ids, pid_t id);
 
 void print_info(struct message* msg);
 
-int init_shell(int* pid);
+int shell_init(int* pid);
 
-void start_shell(char* buf, char* input, char* cwd);
+int check_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
+
+int shell_execute(char* buf, struct message* msg, char* cwd);
 
 void init_daemon();
 
-void mutex_init(pthread_mutex_t* mutexes, int* id_map);
+int mutex_init(pthread_mutex_t* mutexes, int* id_map);
 
-void udp_get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data, int connection_type);
+int get_msg(int sk, struct sockaddr_in* sk_addr, struct message* msg, struct sockaddr_in* client_data,
+             int* client_sk, int* pclient_sk, int connection_type);
 
-void* handle_connection(void* memory);
+int threads_distribute(int connection_type, struct message* memory, struct message* msg,
+                        pthread_t* thread_ids, int* id_map, int client_sk, int* pclient_sk);
+
+int print_client_addr(struct message* msg);
+
+int handle_message(struct message* msg, char* dir, char* buf);
+
+void thread_routine(struct message*  msg, struct message* memory, char* dir, char* buf);
+
+void* udp_handle_connection(void* memory);
 
 void* tcp_handle_connection(void* memory);
 
 void check_thread(pthread_t* thread_ids, struct message* thread_memory, int* id_map, struct message* msg, void* handle_connection);
 
-void terminate_server(int sk);
+void terminate_server();
 
 void send_broadcast(int sk, struct message* msg, struct sockaddr_in* client_data);
 
-void reply_to_client(struct message* msg);
+int reply_to_client(struct message* msg);
 
-void tcp_reply_to_client(int client_sk, struct message* msg);
+int tcp_reply_to_client(int client_sk, struct message* msg);
 
 void send_to_server(int sk, struct message* msg, struct sockaddr_in* sk_addr, \
                      struct sockaddr_in* server_data, socklen_t* addrlen); 

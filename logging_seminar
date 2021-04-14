@@ -1,0 +1,49 @@
+Logging
+1) учет действий пользователя
+2) статистика
+
+1) printf	- время
+			- log level
+			- версия, дата, argv, pids
+
+
+log_init(char* path);
+pr_err(...)
+pr_info(...)
+pr_warn(...)
+pr_strerror(...)
+__LINE__
+__FILE__
+
+<DATE> <PID> <FILE> <LINE> <LOG_LEVEL> <MESSAGE>
+
+example
+#define p_err(fmt, ...) \
+int pr_log_level(LogLevel, fmt, ...) \
+
+датой занимается функция, пид - тоже, но не можем узнать изнутри функции файл строку
+pr_log_level(LOG_ERR,  "%s:%d" fmt, __FILE__, __LINE__, ##__VA_ARGS__) // example: "abc" "def" > "abcdef"
+
+pr_err("Failed to open file %d %s", errno, strerror(errno)));
+pr_log_level(LOG_ERROR, "%s:%d <fmt>", __FILE__, __LINE__, errno, strerror(errno))
+
+
+static int logfd = -1 (не ноль)
+static char BUF[BUFSIZ];
+static int pos // позиция в буфере
+int pr_log_level(int loglevel, char* fmt, ...) { // вместо ... va_list
+	if (logfd < 0) {
+		log_init(NULL);
+	}
+	// должны писать в буфер
+	pr_date();
+	pr_pid();
+	pr_log_level();
+
+	// dprintf(fmt, ...); 
+	vsnprintf(buf + pos, bufsiz - pos , fmt, va_list params)
+	write(...);
+
+	// add sync so threads do now write simultaniously. And add to log init as well
+	
+}

@@ -1,0 +1,2000 @@
+sudo ./server
+sudo pkill server
+make all
+sudo ./server
+./client "Hello"
+make all
+./client "Hello"
+./client
+./client exit
+make clean
+make all
+./client
+ls
+cd /var/log
+ls
+sudo rm server.log
+cat server.log 
+shell ls
+ls
+cd /var/log
+cat server.log 
+cd
+ls
+cd Programming/
+ls
+subl sfinae.cpp
+./client
+shell cd /home
+./client
+./client
+shell cd /home/stanislav
+./client
+cd Documents/MIPT/4th_semester/
+ls
+cd Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Server/
+l
+ls
+make clean
+ls
+code .
+ls
+rm a.out
+ls
+make all
+sudo ./server
+make all
+sudo ./server 
+make all
+sudo ./server 
+sudo pkill server
+sudo ./server 
+ps -aux | grep server
+sudo ./server
+make all
+sudo ./server
+make all
+ps -aux | grep server
+sudo pkill server
+sudo ./server
+sudo pkill server
+sudo ./server
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Server/
+ls
+code .
+git status
+git branch
+git branch refactoring
+git checkot refactoring
+git checkout refactoring
+git add .
+git commit -m "Refactoring code"
+git push -u refactoring
+git push -u origin refactoring
+git status
+git branch
+make all
+sudo ./server
+sudo pkill server
+sudo ./server
+ps -aux | grep server
+make all
+sudo pkill server
+sudo ./server
+make all
+sudo ./server
+make all
+sudo pkill server
+sudo ./server
+make all
+sudo pkill server
+sudo ./server
+ls
+sudo ./server
+ls
+make clean
+make all
+sudo ./server
+make all
+ls
+sudo ./server
+sudo pkill server
+make all
+sudo pkill server
+sudo ./server
+ls
+cd ..
+ls
+gcc tty.c
+subl tty.c 
+ls
+cd ..
+ls
+cd Sockets_seminars/
+ls
+subl tty_seminar 
+subl tty.c
+ls
+cd Server/
+ls
+cd source/
+ls
+gcc tty.c
+gcc -I ../include/my_server.h  tty.c
+subl tty.c 
+gcc tty.c
+./a.out
+ls
+cd ..
+ls
+make all
+sudo ./server
+make all
+sudo ./server
+shell ls
+ps -aux | grep server
+sudp pkill server
+sudo pkill server
+ls
+make all
+sudo ./server
+ps -aux | grep server
+sudo ./server
+make all
+sudo pkill server
+shell ls
+make all
+sudo ./server
+git status
+git branch
+git add .
+git commit -m "Updated bash settings and fixed duplicated broadcast message"
+git push
+man tcseattr
+man tcsetattr
+make all
+sudo ./server
+make all
+sudo ./server
+make all
+sudo ./server
+make all
+sudo pkill server
+sudo ./server
+sudo pkill server
+make all
+sudo ./server
+make all
+sudo ./server
+git status
+git add .
+git commit -m "Removed echo flag in bash"
+git push
+make all
+sudo ./server
+exit
+cd /var/log
+cat server.log 
+sudo rm server.log 
+cat server.log 
+ls
+cat server.log 
+sudo rm server.log 
+cat server.log 
+ls
+cat server.log 
+l
+s
+cat server.log 
+ls
+cat server.log 
+cat server.log
+cat server.log 
+./client
+make all
+./client
+./client --udp
+./client 
+./client --tcp
+./client --udp
+./client --tcp
+shell ls
+./client
+cd Documents/MIPT/4th_semester/Computer_technologies/Sockets_seminars/Server/
+ls
+code .
+make all
+sudo ./server --udp
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+make all
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+ps -aux | grep server
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+make all
+sudo pkill server
+sudo strace ./server --tcp
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+man sendto
+man recvfrom
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+ps -aux | grep server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+ps -aux | grep server
+sudo ./server --tcp
+sudo pkill server
+make all
+ps -aux | grep server
+sudo ./server --udp
+git status
+git branch
+git log --oneline --graph --all
+git branch
+git log --oneline --graph --all
+git checkout 471a595
+git add .
+git commit -m "Fixing TCP connection"
+git checkout 471a595
+git branch working_refactored
+git status
+git log --oneline --graph --all
+git status
+git add .
+git commit -m "This is working refactored version"
+ls
+git status
+git log --oneline --graph --all
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+./client --udp
+./client --tcp
+sudo strace ./client --tcp
+./client --tcp
+sudo strace ./client --tcp
+./client --tcp
+shell ls
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+cd /var/log
+cat server.log 
+cd /var/log
+cat server.log 
+A
+cat server.log 
+git status
+man 7 ip
+cd /
+ls
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Server/
+ls
+code .
+git diff
+git help diff
+make all
+sudo ./server --udp
+git log --oneline --graph --all
+git checkout 504c842
+git status
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make al
+make all
+sudo ./server --udp
+ps -aux | grep server
+sudo pkill server
+make all
+sudo ./server --udp
+ps -aux | grep server
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+sudo ./server --tcp
+make all
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+make all
+git status
+git branch
+git log --oneline --graph --all
+make all
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+make all
+
+ps -aux | grep server
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --udo
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --udp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+git status
+git branch
+git log --oneline --graph --all
+git branch tcp_fixing
+git log --oneline --graph --all
+git add .
+git commit -m "Fixing tcp connection"
+git log --oneline --graph --all
+git branch tcp_still_fixing
+git checkout tcp_still_fixing 
+git add .
+git commit -m "Fixing tcp"
+git status
+git log --oneline --graph --all
+./client --udp
+sudo strace ./client --udp
+./client --udp
+./client --tcp
+./client --udp
+shell ls
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client
+./client --tcp
+shell echo $$
+./client --tcp
+cd /var/log
+cat server.log 
+netstat
+cat server.log 
+cd /var/log
+cat server.log 
+cd /var/log
+cat server.log 
+cd /var/log
+cat server.log 
+./client --tcp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udp
+./client --tcp
+./client --udexit
+./client --udp
+./client --tcp
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Server/
+ls
+code .
+ls
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+make all
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --udp
+make all
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --udp
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo ./server --tcp
+ps -aux | grep server
+make all
+ps -aux | grep server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep server
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+./client --tcp
+./client --udp
+exit
+cd Documents/MIPT/4th_semester/Computer_technologies/Sockets_seminars/Server/
+ls
+code .
+make all
+sudo ./servet --tcp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+make all
+sudo pkill server
+sudo strace ./server --tcp
+make all
+sudo pkill server
+make all
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+make all
+sudo strace ./server --tcp
+sudo strace ./server --udp
+make all
+sudo strace ./server --udp
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo strace ./server --udp
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+make all
+sudo strace ./server --tcp
+sudo strace ./server --udp
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+sudo strace ./server --udp
+sudo pkill server
+sudo strace ./server --tcp
+sudo pkill server
+sudo strace ./server --tcp
+pwd
+./client --tcp
+./client --udp
+./client --tcp
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Server/
+ls
+code .
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+sudo pkill server
+udo pkill server
+sudo ./server --tcp
+sudo pkill server
+make all
+sudo ./server --tcp
+ps -aux | grep server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+./client --udp
+./client --tcp
+cd /var/log
+cat server.log 
+;s
+cat server.log 
+make all
+cat server.log 
+cd /var/log/
+ls
+cat server.log 
+cd Documents/MIPT/4th_semester/Computer_technologies/Sockets_seminars/Server/
+LS
+ls
+code .
+make all
+sudo ./server --tcp
+sudo strace ./server --tcp
+./client --tcp
+cd /var/log
+cat server.log 
+./client --udp
+./client --tcp
+sudo pkill server
+./client --udp
+./client --tcp
+cd Documents/MIPT/4th_semester/
+cd Computer_technologies/
+cd Sockets_seminars/Server/
+ls
+code .
+make all
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+cd Documents/MIPT/4th_semester/Computer_technologies/Sockets_seminars/Server/
+ls
+code .
+sudo strace ./server --tcp
+make al
+make all
+sudo strace ./server --tcp
+sudo strace ./client --tcp
+./client --tcp
+cd /var/log
+sudo ./server --tcp
+cat server.log 
+cd Embedded/Avr/
+ls
+cd LED_timer_blink/
+ls
+subl .
+sudo bash install.sh 
+ls
+sudo bash install.sh 
+ls
+cd
+ls
+cd Embedded/
+ls
+cd Avr/
+ls
+cd LED_blink/
+ls
+ls
+cd Embedded/Avr/
+ls
+rm -r LED_blink
+mv LED_timer_blink/LED_blink
+mv LED_timer_blink LED_blink
+ls
+cd LED_blink/
+ls
+make
+subl .
+ls
+cd /var/log/
+ls
+cat server.log 
+git status
+./client --tcp
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd Client_server_app/
+ls
+make all
+sudo ./server --udp
+ifconfig
+code .
+sudo ./server --udp
+ls
+code .
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+git status
+git add .
+git commit -m "Minor changes"
+git push
+git checkout develop
+git merge master
+git status
+git push
+man tcsgetgrp
+man tcgetgrp
+man tcsetpgrp
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+git branch
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+git status
+git branch
+git checkout suspend_feature
+git branch suspend_feature
+git checkout suspend_feature
+git add .
+git commit -m "Added client timeout"
+git push -u origin suspend_feature
+./client --udp
+shell ls
+./client --udp
+sudo pkill server
+./client --udp
+shell ping 8.8.8.8
+./client --udp
+netstat
+ps
+ps -aux
+netstat
+./client --udp
+man setsockopt
+./client --udp
+cd
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Sockets_seminars/
+ls
+cd ...
+cd ..
+ls
+mv Sockets_seminars/ Networking_MIPT
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+cd ..
+ls
+cd Client_server_app/
+ls
+cd source
+ls
+gcc tty.c
+ls
+gcc tty.c
+./a.out
+man tcsetattr
+./client --udp
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+ls
+git branch
+git checkout master
+git status
+make all
+code .
+sudo ./server --udp
+cd /var/log/
+ls
+cat l
+cat logger.log 
+man ctime
+cat logger.log 
+pwd
+ls
+cat logger.log 
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+subl logging_seminar
+ls
+subl main.c
+subl logger.h
+subl logger.c
+man 2 open
+ls
+gcc logger.c main.c
+ls
+cd Client_server_app/
+ls
+cd include/
+ls
+subl my_server.h 
+ls
+cd ..
+ls
+cd ..
+ls
+gcc logger.c main.c
+./a.out
+gcc logger.c main.c
+./a.out
+gcc logger.c main.c
+./a.out
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+./a.out
+sudo ./a.out
+man va_list
+man vaars
+man vsnprintf
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+man snprintf
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+gcc logger.c main.c
+sudo ./a.out
+./client --udp
+ls
+cd Client_server_app/
+ls
+./client --udp
+ls
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+code .
+sudo ./server --udp
+ps -aux | grep server
+cd Documents/MIPT/4th_semester/
+cd Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+code .
+man ntoa
+man itoa
+man ntohl
+men make all
+make all
+sudo ./server --udp
+ifconfig
+ping 192.168.1.255
+ping 192.168.1.255 -b
+traceroute 192.168.1.1
+sudo apt install traceroute
+traceroute 192.168.1.1
+traceroute 192.168.1.5
+traceroute 192.168.1.2
+traceroute 192.168.1.3
+ping 192.168.1.255 -b
+traceroute 192.168.1.8
+traceroute 192.168.1.0
+traceroute 192.168.1.9
+ifconfig
+traceroute 192.168.1.11
+ps -aux | grep server
+make all
+ifconfig
+make all
+ps -aux | grep server
+sudo apt install traceroute
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo ./server --tcp
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --tcp
+man 7 ip
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --udp
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+git status
+git branch remote_connection
+git checkout remote_connection 
+git add .
+git commit -m "Checking remote connection"
+git push -u origin remote_connection
+make all
+sudo pkill server
+sudo ./server --udp
+man inet_addr
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+git status
+git branch
+git add .
+git status
+git commit -m "Connects to ip now"
+git push
+ls
+cd ..
+s
+ls
+git status
+git add logget.c logger.h logging_seminar main.c
+git status
+git add .
+git status
+git rm a.out 
+git status
+git rm -f a.out
+ls
+git status
+git commit -m "Added logger seminar code"
+git push
+./client --ip 192.168.1.11
+./client --i[
+./client --ip
+./client --ip 192.168.1.11
+./client --ip 192
+./client --ip
+make all
+./client --ip 192.168.1.1
+make all
+./client --ip 192.168.1.1
+./client --ip 192.168.1.11
+sudo strace ./client --ip 192.168.1.11
+sudo strace ./client --ip 127.0.0.1
+make all
+./client --ip 0.0.0.0
+./client --ip 192.168.1.11
+ifconfig
+./client --ip 127.0.0.1
+./client --ip 192.168.1.11
+make all
+./client --ip 192.168.1.11
+./client --ip 0.0.0.0
+./client --ip 127.0.0.1
+./client --ip 192.168.1.11
+./client --ip 192.168.1.1
+./client --ip 192.168.1.11
+man 7 ip 
+man inet_ntoa
+man 7 ip 
+cd /var/log
+ls
+cat server.log 
+man bind
+cat server.log 
+git status
+man inet_pton
+man inet_getaddr
+cat server.log 
+man inet_getaddr
+man getaddr
+man inet_addr
+man 7 ip
+cd /
+ls
+cd test_dir_remove_later/
+ls
+cd ..
+ls
+cd test_dir_remove_later/
+ls
+pwd
+cd 
+ls
+cd /
+ls
+ping 192.168.1.255 -b
+man oing
+ping 192.168.0.255 -b
+ifconfig
+ping 192.168.1.107
+ping 192.168.1.255
+ping 192.168.1.255 -b
+sudo ping 192.168.1.255 -b
+ping 192.168.1.255 -b -c
+ping 192.168.1.255 -a
+ping 192.168.1.255 -a -b
+ping 192.168.1.255 -a -f
+ping 192.168.1.255 -a -f -b
+ping 192.168.1.255 -b -v
+ping 192.168.1.255 -b -v -4 -R
+traceroute 192.168.1.255
+traceroute 192.168.1.107
+ping 192.168.1.107
+ping 192.168.1.255
+ping 192.168.1.255 -b
+ping 192.168.255.255 -b
+ping 192.168.1.255 -b
+sudo strace ping 192.168.1.255
+sudo strace ping 192.168.1.255 -b
+sudo strace ping 192.168.1.107 -b
+./client --ip 192.168.1.107
+./client --ip 127.0.0.1
+ls
+cd Documents/MIPT/4th_semester/
+cd Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+ды
+code .
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+s
+ls
+sudo ./server --udp
+ifconfig
+sudo pkill server
+sudo ./server --udp
+ifconfig
+netstat
+ifconfig
+ip a
+ping -t
+ping -t 1
+ping -t 192.168.1.255
+ping 192.168.1.255
+ping 192.168.1.255 -b
+ping 192.168.1.255 -b -t
+ping 192.168.1.255 -b -t 1
+arp a
+ara -a
+arp -a
+sudo arp -a
+sudo arp-scan
+arp-scan
+sudo apt install arp-scan
+ifconfig
+sudo arp-scan --interface=wlp3s0 --localnet
+sudo arp-scan
+sudo arp-scan --interface=wlp3s0 --localnet
+ifconfig
+sudo arp-scan --interface=inet --localnet
+nmap
+sudo apt install nmap
+nmap
+nmap -sn 192.168.1.255
+nmap -sn 192.168.1.0/24
+ls
+cd Documents/MIPT/
+ls
+cd 4th_semester/
+ls
+cd Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+ls
+make all
+sudo ./server --udp
+code .
+ды
+ls
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+git branch
+ls
+make all
+sudo ./server --udp
+ifconfig
+ls
+cd /var/log
+cat server.log 
+ls
+cd DOc
+cd D
+cd Do
+l
+ls
+cd Documents/
+cd MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+code .
+ls
+mv functions.c network.c
+cd source/
+mv functions.c network.c
+ls
+cd ..
+ls
+make clean
+make all
+sudo ./server --tccp
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+git status
+git branch
+git checkout refactoring
+git status
+git branch -d refactoring
+git branch -D refactoring
+git branch refactoring
+git status
+git branch
+git status
+git checkout refactoring
+git add .
+git status
+git commit -m "Combined code into several compacr functions"
+git push -u origin refactoring
+cd /var/log
+ls
+cat server.log 
+ls
+cd Embedded/Avr/
+ls
+cd LED_blink/
+ls
+git status
+git branch
+git checkout develop
+git status
+cd led_blink/
+ls
+cd ..
+ls
+subl .
+ls
+microcontrollers_questions.docx
+doc
+ls
+git status
+make all
+git status
+make flash
+git status
+make flash
+git status
+make flash
+ls
+git status
+git add .
+git commit -m "Added comments"
+git checkout master
+git merge develop
+git status
+ls
+cd Embedded/Av
+cd Embedded/Avr/
+ls
+cd LED_blink/
+ls
+git status
+git branch
+subl .
+make flash
+git status
+git branch
+git branch debouncing
+git checkout debouncing 
+git add .
+git commit -m "Turned on TIMER1"
+make flash
+git branch
+git status
+git add .
+make flash
+git status
+git add .
+git commit -m "Almost removed debouncing"
+gut status
+git status
+make flash
+git status
+git add .
+git commit -m "Fixing debouncing"
+ls
+ls -l
+ls
+cd Documents/MIPT/
+ls
+cd 4th_semester/
+ls
+cd Computer_technologies/
+l
+ls
+cd Networking_MIPT/
+lss
+ls
+cd Client_server_app/
+ls
+git branch
+cd ..
+subl preprocessor
+ls
+cd Client_server_app/
+ls
+code .
+ды
+cd ..
+ls
+subl field.c
+subl field.h
+subl m16.c
+subl mn.c
+subl main.c
+mv m16.c m16.so
+mv mn.c mn.so
+subl m16.so 
+subl mn.so
+mv m16.so m16.c
+mv mn.so mn.c
+subl m16.c
+subl mn.c
+ls
+gcc -c -Wall -Werror m16.c -o m16.o
+gcc -shared -o libm16.so
+gcc -shared -o libm16.so m16.o
+gcc field.c -o a.out
+gcc field.c
+man ldl
+gcc -ldl  field.c
+gcc -ldl field.c
+man dlopen
+gcc -ldl field.c
+gcc -dll field.c
+gcc -dl
+gcc -dl field.c
+gcc -l -dl field.c
+gcc -ldl field.c
+gcc field.c -ldl
+gcc 
+gcc field.c -ldl
+ls
+./a.out ./libm16.so -ldl
+sudo ./a.out ./limb16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./limb16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./limb16.so -ldl
+man dlopen
+man dlerror
+sudo ./a.out ./limb16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./limb16.so -ldl
+sudo ./a.out limb16.so -ldl
+ls
+sudo ./a.out libm16.so -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+gcc field.c -ldl
+sudo ./a.out ./libm16.so -ldl
+strace ./a.out ./libm16.so -ldl
+ls
+gcc -c -Wall -Werror m16.c -o m16.o
+gcc -c -Wall -Werror mn.c -o mn.o
+gcc -shared -o libmn.so mn.o
+ls
+subl field.c
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+gcc -c -Wall -Werror mn.c -o mn.o
+gcc -shared -o libmn.so mn.o
+ls
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+ls -la
+gcc -c -Wall -Werror mn.c -o mn.o
+gcc -shared -o libmn.so mn.o
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+strace ./a.out ./libmn.so
+man RTLD_NOW
+man dlopen
+sudo ./a.out ./libmn.so
+gcc -c -Wall -Werror mn.c -o mn.o
+gcc -shared -o libmn.so mn.o
+gcc -c -Wall -Werror mn.c -o mn.o -fPIC
+gcc -shared -o libmn.so mn.o
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+gcc -c -Wall -Werror mn.c -o mn.o -fPIC
+gcc -shared -o libmn.so mn.o
+gcc field.c -ldl
+sudo ./a.out ./libmn.so
+
+ls
+cd LED_blink/
+ls
+subl .
+make flash
+git status
+git branch
+git add led_blink.s
+git status
+git commit -m "Updated debouncing, added timer reset on comparison"
+git checkout master
+git status
+git merge debouncing 
+git status
+git add .
+git status
+git push
+git checkout debouncing
+git push -u debouncing
+git push -u origin debouncing
+git checkout develop
+git merge master
+git push
+ls
+git status
+git add .
+git status
+git branch
+git commit -m "Added schematic"
+git push
+git checkout master
+git merge develop
+git push
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+s
+ls
+make all
+code .
+make server
+make all
+ls
+make all
+cd /var/log
+cat server.log
+l
+cat server.log
+ды
+ls
+cd Documents/MIPT/4th_semester/
+ls
+cd Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+code .
+make all
+make clean
+make all
+make clean
+ls
+cd source
+ls
+cd ..
+ls
+make all
+make server.o
+make client.o
+make network.o
+make all
+ls
+./server
+make all
+./server
+sudo ./server
+ps -aux | grep server
+sudo pkill server
+make clean
+make all
+./server
+make all
+./server
+ls
+touch source/handlers.c
+make all
+ls
+make clean
+make all
+make clean
+make all
+./server
+sudo ./server
+sudo ./server --udp
+sudo strace ./server --udp
+./client
+./client --udp
+ls
+cd /var/log
+ls
+cat server.log 
+sudo rm -f server.log
+cd /var/log
+cat server.log 
+./client
+./client --udp
+sudo pkill client
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+code .
+sudo ./server
+sudo pkill server
+make all
+sudo ./server
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+shell ls
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo strace ./server --udp
+make all
+sudo strace ./server --udp
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+ls
+git status
+git branch
+git status
+git add Makefile include/my_server.h 
+git add source/network.c 
+git add source/server.c 
+git commit -m "Refactored UDP, now code is split into functions"
+git push
+git checkout master
+git status
+git add .
+git commit -m "Added seminar materials"
+git push
+git checkout refactoring 
+ls
+cd source/
+ls
+cd ..
+ls
+git status
+git branch
+git status
+ls
+cd source/
+ls
+cd ..
+ls
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+ls
+ps -aux | grep server
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+make all
+sudo ./server --udp
+cd Documents/MIPT/
+ls
+cd 4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+code .
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+git status
+git branch
+git status
+git add include/my_server.h source/network.c source/server.c 
+ls
+git status
+git add .
+git commit -m "Split into functions"
+git push
+./client
+cd /var/log
+cat server.log 
+cd /var/log
+cat server.log 
+./client --udp
+cd Documents/MIPT/Co
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make clean
+make all
+code .
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+make all
+sudo ./server --udp
+ы
+ls
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make all
+code .
+make all
+ls
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+code .
+cd Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+make clean
+make all
+code .
+ls
+ifconfig
+make all
+make clean
+make all
+sudo ./server --udp
+git status
+git branch
+git add .
+git commit -m "Refactored client, now all code is split into functions and is easy to read"
+git push
+make all
+make clean
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+make clean
+make all
+sudp ./client --udp
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+make clean
+make all
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+sudo ./server --udp
+ps
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+make all
+make clean
+ls
+make all
+ls
+sudo pkill server
+sudo ./server --udp
+ls
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+sudo pkill server
+git status
+git branch
+git add .
+git status
+git add ../a.out ../field.c ../field.h ../libm16.so ../libmn.so ../m16.so ../mn.c ../preprocessor
+git status
+git add ../a.out
+git add ../field.c
+git add ../libm16.so 
+git add ../field.h 
+git add ../m16.c 
+git status
+git add ../libmn.so 
+git add ../mn.c 
+git add ../preprocessor 
+l
+git status
+git commit -m "Now executing commands on server does not require typing shell in command promt"
+git branch
+git push
+ls
+make all
+ls
+sudo ./server --udp
+make all
+make clean
+make all
+sudo pkill server
+sudo ./server --udp
+git status
+git add .
+git commit -m "Updated command size"
+git push
+git checkout master
+git merge refactoring
+git status
+git merge --abort
+ls
+git status
+git branch
+git checkout refactoring
+git status
+ls
+git status
+make all
+make clean
+make all
+sudo pkill server
+sudo ./server --udp
+make all
+sudo ./server --udp
+make all
+sudo ./server --udp
+git status
+git add .
+git commit -m "Added exit command and terminating session in client"
+git push
+ls
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+./client
+./client --udp
+./client --udp
+ls
+./client --udp
+ifconfig eth0
+ifconfig l0
+ifconfig lo
+ifconfig
+ifconfig wlan0
+ifconfig lo
+cd /var/log/
+ls
+cat server.log 
+ps -aux | grep server
+sudo pkill server
+cat server.log 
+ps -aux | grep server.log
+ls
+ls -la
+ls -la | grep server
+ls -lah | grep server
+cat server.log 
+sudo rm -f server.log 
+cat server.log 
+cd /home/stanislav
+ls
+./client --udp
+cd ~/Documents/MIPT/4th_semester/Computer_technologies/
+ls
+cd Networking_MIPT/Client_server_app/
+ls
+./client --udp
+cd /var/log
+ls
+cd /var/log
+cat server.log 
+ls
+cat server.log 
+./client --udp
+ls
+./client --udp
+make all
+./client --tcp
+cat server.log 
+./client --tcp
+cd Documents/MIPT/4th_semester/Computer_technologies/
+;s
+ls
+cd Networking_MIPT/
+ls
+cd Client_server_app/
+ls
+code 
+code .
+make all
+sudo ./server --udp
+make all
+sudo pkill server
+sudo ./server --udp
+sudo pkill server
+make all
+sudo ./server --udp
+make all
+ls
+sudo pkill server
+sudo ./server --udp
+git status
+git branch
+git add .
+git commit -m "Added broadcast message"
+git push
+make all
+sudo pkill server
+sudo ./server --tcp
+ps -aux | grep A
+sudo pkill server
+make all
+sudo ./server --tcp
+sudo pkill server
+sudo ./server --tcp
+sudo ./server --udp
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo pkill server
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
+make all
+sudo ./server --tcp
