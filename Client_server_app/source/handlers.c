@@ -83,11 +83,12 @@ void* udp_handle_connection(void* memory) {
         exit(EXIT_FAILURE);
     }
     LOG("Current thread directory: %s\n", dir);
-
+    /* Copy data from memory */
+    memcpy(&msg, memory, sizeof(struct message));
     while (1) {
 
         /* Copy data from memory */
-        memcpy(&msg, memory, sizeof(struct message));
+        //memcpy(&msg, memory, sizeof(struct message));
         /* Lock mutex */
         LOG("Waiting for mutex to be unlocked%s\n", "");
         LOG("Mutex unlocked%s\n", "");
