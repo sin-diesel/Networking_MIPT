@@ -799,6 +799,14 @@ int mutex_init(pthread_mutex_t* mutexes, int* id_map) {
             LOG("Error initializing mutex: %s\n", strerror(errno));
             return -1;
         }
+
+        /* Initial status of mutexes: locked */
+        ret = pthread_mutex_lock(&mutexes[i]);
+        if (ret < 0) {
+            ERROR(errno);
+            LOG("Error locking mutex on init%s\n", "");
+            return -1;
+        }
         id_map[i] = 0;
     }
     return 0;
@@ -1036,27 +1044,26 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
     int ret = 0;
 
     while (1) {
+
         /* Copy data from memory */
-        memcpy(msg, memory, sizeof(struct message));
-        /* Lock mutex */
+        //memcpy(&msg, memory, sizeof(struct message));
         LOG("Waiting for mutex to be unlocked%s\n", "");
+        pthread_mutex_lock(&mutexes[msg.id]);
         LOG("Mutex unlocked%s\n", "");
+        memcpy(&msg, memory, sizeof(struct message));
 
-        pthread_mutex_lock(&mutexes[msg->id]);
-        memcpy(msg, memory, sizeof(struct message));
-        print_info(msg);
-        ret = print_client_addr(msg);
-
+        print_info(&msg);
+        ret = print_client_addr(&msg);
         if (ret < 0) {
             LOG("Client address invalid %s\n", "");
         }
 
         /* Handle client's command */
-        ret = handle_message(msg, dir, buf);
+        ret = handle_message(&msg, dir, buf);
         if (ret < 0) {
             exit(EXIT_FAILURE);
         }
-        ret = reply_to_client(msg);
+        ret = reply_to_client(&msg);
         if (ret < 0) {
             exit(EXIT_FAILURE);
         }
