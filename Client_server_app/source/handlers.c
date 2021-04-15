@@ -2,7 +2,11 @@
 
 
 pthread_mutex_t mutexes[MAXCLIENTS] = {0};
+<<<<<<< HEAD
 //pthread_mutex_t guard_mutexes[MAXCLIENTS] = {0};
+=======
+sem_t sems[MAXCLIENTS];
+>>>>>>> semaphores_switch
 int client_sockets[MAXCLIENTS];
 
 void* tcp_handle_connection(void* memory) {
@@ -85,7 +89,37 @@ void* udp_handle_connection(void* memory) {
     }
     LOG("Current thread directory: %s\n", dir);
 
+<<<<<<< HEAD
     thread_routine(&msg, memory, dir, buf);
+=======
+    /* Copy data from memory */
+    memcpy(&msg, memory, sizeof(struct message));
+    
+    while (1) {
+        /* Lock mutex */
+        LOG("Waiting for mutex to be unlocked%s\n", "");
+        LOG("Mutex unlocked%s\n", "");
+        pthread_mutex_lock(&mutexes[msg.id]);
+        memcpy(&msg, memory, sizeof(struct message));
+
+        print_info(&msg);
+        ret = print_client_addr(&msg);
+        if (ret < 0) {
+            LOG("Client address invalid %s\n", "");
+        }
+
+        /* Handle client's command */
+        ret = handle_message(&msg, dir, buf);
+        if (ret < 0) {
+            exit(EXIT_FAILURE);
+        }
+        ret = reply_to_client(&msg);
+        if (ret < 0) {
+            exit(EXIT_FAILURE);
+        }
+    }
+
+>>>>>>> semaphores_switch
 
     return NULL;
 }
