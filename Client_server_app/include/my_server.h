@@ -17,6 +17,7 @@
 #include <termios.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 
 /* for sockets */
 #include <sys/socket.h>
@@ -128,6 +129,7 @@ enum cmd_len {
 
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
+extern sem_t sems[];
 
 int check_input(int argc, char** argv, int* connection_type);
 

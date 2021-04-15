@@ -884,11 +884,11 @@ int threads_distribute(int connection_type, struct message* memory, struct messa
             exit(EXIT_FAILURE);
         }
     }
-    /* Transfer data to corresponding client's memory cell */
-    if (connection_type == UDP_CON) {
-        thread_memory = &memory[msg->id];
-        memcpy(thread_memory, msg, sizeof(struct message));
-    }
+    // /* Transfer data to corresponding client's memory cell */
+    // if (connection_type == UDP_CON) {
+    //     thread_memory = &memory[msg->id];
+    //     memcpy(thread_memory, msg, sizeof(struct message));
+    // }
 
     /* Unlock mutex so client thread could access the memory */
     if (connection_type == UDP_CON) {

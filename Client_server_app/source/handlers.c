@@ -2,6 +2,7 @@
 
 
 pthread_mutex_t mutexes[MAXCLIENTS] = {0};
+sem_t sems[MAXCLIENTS];
 int client_sockets[MAXCLIENTS];
 
 void* tcp_handle_connection(void* memory) {
@@ -84,10 +85,10 @@ void* udp_handle_connection(void* memory) {
     }
     LOG("Current thread directory: %s\n", dir);
 
+    /* Copy data from memory */
+    memcpy(&msg, memory, sizeof(struct message));
+    
     while (1) {
-
-        /* Copy data from memory */
-        memcpy(&msg, memory, sizeof(struct message));
         /* Lock mutex */
         LOG("Waiting for mutex to be unlocked%s\n", "");
         LOG("Mutex unlocked%s\n", "");
