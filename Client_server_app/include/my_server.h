@@ -128,6 +128,7 @@ enum cmd_len {
 
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
+//extern pthread_mutex_t guard_mutexes[];
 
 int check_input(int argc, char** argv, int* connection_type);
 

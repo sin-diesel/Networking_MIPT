@@ -794,6 +794,7 @@ int mutex_init(pthread_mutex_t* mutexes, int* id_map) {
     for (int i = 0; i < MAXCLIENTS; ++i) {
         /* Initialize mutexes */
         ret = pthread_mutex_init(&mutexes[i], NULL);
+        //ret = pthread_mutex_init(&guard_mutexes[i], NULL);
         if (ret < 0) {
             ERROR(errno);
             LOG("Error initializing mutex: %s\n", strerror(errno));
@@ -801,12 +802,12 @@ int mutex_init(pthread_mutex_t* mutexes, int* id_map) {
         }
 
         /* Initial status of mutexes: locked */
-        ret = pthread_mutex_lock(&mutexes[i]);
-        if (ret < 0) {
-            ERROR(errno);
-            LOG("Error locking mutex on init%s\n", "");
-            return -1;
-        }
+        // ret = pthread_mutex_lock(&mutexes[i]);
+        // if (ret < 0) {
+        //     ERROR(errno);
+        //     LOG("Error locking mutex on init%s\n", "");
+        //     return -1;
+        // }
         id_map[i] = 0;
     }
     return 0;
@@ -1053,7 +1054,10 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
         LOG("Waiting for mutex[%d] to be unlocked\n", msg->id);
         pthread_mutex_lock(&mutexes[msg->id]);
         LOG("Mutex[%d] unlocked\n", msg->id);
+
+        //pthread_mutex_lock(&guard_mutexes[msg->id]);
         memcpy(msg, memory, sizeof(struct message));
+        //pthread_mutex_unlock(&guard_mutexes[msg->id]);
 
         print_info(msg);
         ret = print_client_addr(msg);

@@ -2,6 +2,7 @@
 
 
 pthread_mutex_t mutexes[MAXCLIENTS] = {0};
+//pthread_mutex_t guard_mutexes[MAXCLIENTS] = {0};
 int client_sockets[MAXCLIENTS];
 
 void* tcp_handle_connection(void* memory) {
