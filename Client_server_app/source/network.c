@@ -901,6 +901,7 @@ int threads_distribute(int connection_type, struct message* memory, struct messa
     /* Unlock mutex so client thread could access the memory */
     if (connection_type == UDP_CON) {
         ret = pthread_mutex_unlock(&mutexes[msg->id]);
+        LOG("Unlocked mutex[%d]\n", msg->id);
         if (ret < 0) {
             LOG("Error unlocking mutex.%s\n", "");
             return -1;
@@ -1047,13 +1048,13 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
 
         /* Copy data from memory */
         //memcpy(&msg, memory, sizeof(struct message));
-        LOG("Waiting for mutex to be unlocked%s\n", "");
-        pthread_mutex_lock(&mutexes[msg.id]);
+        LOG("Waiting for mutex[%d] to be unlocked\n", msg->id);
+        pthread_mutex_lock(&mutexes[msg->id]);
         LOG("Mutex unlocked%s\n", "");
         memcpy(&msg, memory, sizeof(struct message));
 
-        print_info(&msg);
-        ret = print_client_addr(&msg);
+        print_info(msg);
+        ret = print_client_addr(msg);
         if (ret < 0) {
             LOG("Client address invalid %s\n", "");
         }
