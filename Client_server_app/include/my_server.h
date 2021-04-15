@@ -129,11 +129,7 @@ enum cmd_len {
 
 /* Mutexes which are responsible for threads */
 extern pthread_mutex_t mutexes[];
-<<<<<<< HEAD
-//extern pthread_mutex_t guard_mutexes[];
-=======
 extern sem_t sems[];
->>>>>>> semaphores_switch
 
 int check_input(int argc, char** argv, int* connection_type);
 

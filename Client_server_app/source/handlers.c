@@ -2,11 +2,8 @@
 
 
 pthread_mutex_t mutexes[MAXCLIENTS] = {0};
-<<<<<<< HEAD
 //pthread_mutex_t guard_mutexes[MAXCLIENTS] = {0};
-=======
 sem_t sems[MAXCLIENTS];
->>>>>>> semaphores_switch
 int client_sockets[MAXCLIENTS];
 
 void* tcp_handle_connection(void* memory) {
@@ -89,9 +86,6 @@ void* udp_handle_connection(void* memory) {
     }
     LOG("Current thread directory: %s\n", dir);
 
-<<<<<<< HEAD
-    thread_routine(&msg, memory, dir, buf);
-=======
     /* Copy data from memory */
     memcpy(&msg, memory, sizeof(struct message));
     
@@ -119,7 +113,6 @@ void* udp_handle_connection(void* memory) {
         }
     }
 
->>>>>>> semaphores_switch
 
     return NULL;
 }
