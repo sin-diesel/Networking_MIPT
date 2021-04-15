@@ -1044,14 +1044,16 @@ int reply_to_client(struct message* msg) {
 void thread_routine(struct message* msg, struct message* memory, char* dir, char* buf) {
     int ret = 0;
 
+    memcpy(msg, memory, sizeof(struct message));
+
     while (1) {
 
         /* Copy data from memory */
         //memcpy(&msg, memory, sizeof(struct message));
         LOG("Waiting for mutex[%d] to be unlocked\n", msg->id);
         pthread_mutex_lock(&mutexes[msg->id]);
-        LOG("Mutex unlocked%s\n", "");
-        memcpy(&msg, memory, sizeof(struct message));
+        LOG("Mutex[%d] unlocked\n", msg->id);
+        memcpy(msg, memory, sizeof(struct message));
 
         print_info(msg);
         ret = print_client_addr(msg);
@@ -1060,11 +1062,11 @@ void thread_routine(struct message* msg, struct message* memory, char* dir, char
         }
 
         /* Handle client's command */
-        ret = handle_message(&msg, dir, buf);
+        ret = handle_message(msg, dir, buf);
         if (ret < 0) {
             exit(EXIT_FAILURE);
         }
-        ret = reply_to_client(&msg);
+        ret = reply_to_client(msg);
         if (ret < 0) {
             exit(EXIT_FAILURE);
         }
